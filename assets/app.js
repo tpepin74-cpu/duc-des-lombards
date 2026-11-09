@@ -341,7 +341,7 @@ function posterHero(o, label, intro = false) {
   const e = o.e, name = e.jam ? 'Jam du Duc' : e.title;
   const [l1, l2] = splitName(name.replace(' & ', ' & '));
   const fs = Math.max(...[l1, l2].map(x => x.length));
-  const size = `--d:${(92 / Math.max(fs, 5)).toFixed(2)}vw;--m:${(118 / Math.max(fs, 5)).toFixed(2)}vw`;
+  const size = `font-size:min(${(118 / Math.max(fs, 5)).toFixed(1)}vw, 15rem, 24svh)`;
   return `<section class="poster-hero" data-hero aria-labelledby="ph-title">
     ${intro ? `<p class="ph-id"><span class="ph-id-a">Club de jazz</span><span class="ph-id-b">Paris · Châtelet</span><span class="ph-id-c">2 concerts par soir · depuis les années 80</span></p>` : ''}
     <div class="ph-meta"><span class="lab"><span class="eq" data-lottie="equalizer" aria-hidden="true"></span>${esc(label)}</span>
@@ -350,7 +350,7 @@ function posterHero(o, label, intro = false) {
       <h1 id="ph-title" class="sr">${esc(title(e))}</h1>
       <div class="nm l1" aria-hidden="true" style="${size}">${esc(l1)}</div>
       ${cut(e.img) ? `<div class="blk" aria-hidden="true" style="left:58%;top:18%;width:22%;height:64%"></div>
-      <div class="cut-wrap"><img class="cut" src="${cut(e.img)}" alt="${esc(e.title)}" fetchpriority="high" decoding="async" style="translate:-50% 0"></div>`
+      <div class="cut-wrap"><img class="cut" src="${cut(e.img)}" alt="${esc(e.title)}" fetchpriority="high" decoding="async"></div>`
         : e.img ? `<div class="blk" aria-hidden="true" style="left:62%;top:10%;width:30%;height:70%"></div>
       <div class="cut-wrap"><div class="ph-photo"><img class="cut" src="${img(e.img, 960)}" alt="${esc(e.title)}" fetchpriority="high" decoding="async"></div></div>`
         : `<div class="blk" aria-hidden="true" style="left:var(--pad);top:30%;width:36%;height:38%"></div>`}
@@ -378,7 +378,7 @@ function home() {
     const picks = upcoming().filter(o => cut(o.e.img) && !o.e.jam && o.e.id !== n?.e.id && !seen.has(o.e.id) && seen.add(o.e.id)).slice(0, 5);
     const L = [ { l: 1, t: 8, w: 36, bg: 'var(--jade)', s: .6 }, { l: 33, t: 36, w: 30, bg: '#fff', s: 1.2 }, { l: 60, t: 4, w: 34, bg: '#fff', s: .8 }, { l: 66, t: 50, w: 32, bg: '#000', s: 1.4 }, { l: 4, t: 56, w: 30, bg: '#0f0f0f', s: 1.0 } ];
     cl.insertAdjacentHTML('beforeend', picks.map((o, i) => { const p = L[i]; const st = o.sets.find(x => bookable(setState(o.d, x)));
-      return `<div class="pc pc${i + 1}" data-speed="${p.s}" style="left:${p.l}%;top:${p.t}%;width:${p.w}%">
+      return `<div class="pc" data-speed="${p.s}" style="left:${p.l}%;top:${p.t}%;width:${p.w}%">
       <a href="${link(o.e)}" style="display:block;position:relative;text-decoration:none;color:inherit">
         <span class="bg" aria-hidden="true" style="background:${p.bg};left:10%;right:10%;top:16%;bottom:0"></span>
         <img src="${cut(o.e.img)}" alt="${esc(o.e.title)}" loading="lazy" decoding="async">
@@ -628,7 +628,7 @@ function bot() {
   $('form', p).addEventListener('submit', e => { e.preventDefault(); const v = input.value.trim(); if (!v) return; input.value = ''; reply(v); });
   // bring the booking sheet above the chat
   p.addEventListener('click', e => { if (e.target.closest('[data-book],[data-wait]') && innerWidth < 760) open(false); });
-  if (false) setTimeout(() => { if (!p.classList.contains('is-open')) { hint.classList.add('is-on'); store.set('hinted', true); setTimeout(() => hint.classList.remove('is-on'), 6000); } }, 4000);
+  if (!store.get('hinted', false)) setTimeout(() => { if (!p.classList.contains('is-open')) { hint.classList.add('is-on'); store.set('hinted', true); setTimeout(() => hint.classList.remove('is-on'), 6000); } }, 4000);
   document.addEventListener('click', e => { if (e.target.closest('[data-open-bot]')) { e.preventDefault(); open(true); } });
 }
 
@@ -704,12 +704,12 @@ function motionScene() {
   blk.style.transformOrigin = 'bottom';
   const c = $('.cut', hero);
   if (c) {
-    animate(c, { clipPath: ['inset(100% 0% 0% 0%)', 'inset(0% 0% 0% 0%)'], transform: ['translateY(12%) scale(1.08)', 'translateY(0%) scale(1)'] }, { duration: 1.3, delay: t0 + .2, ease: IO });
+    animate(c, { clipPath: ['inset(100% 0% 0% 0%)', 'inset(0% 0% 0% 0%)'], transform: ['scale(1.08)', 'scale(1)'] }, { duration: 1.3, delay: t0 + .2, ease: IO });
     // le détouré suit la souris, ressort amorti
     const wrap = $('.cut-wrap', hero);
     if (matchMedia('(pointer: fine)').matches) hero.addEventListener('pointermove', ev => {
       const r = hero.getBoundingClientRect(), x = (ev.clientX - r.left) / r.width - .5, y = (ev.clientY - r.top) / r.height - .5;
-      animate(wrap, { transform: `translate(${x * 30}px, ${y * 16}px) rotate(${x * 2}deg)` }, { type: 'spring', stiffness: 120, damping: 18 });
+      animate(wrap, { transform: `translateX(${x * 30}px)` }, { type: 'spring', stiffness: 120, damping: 18 });
       animate(blk, { transform: `translate(${-x * 22}px, ${-y * 12}px)` }, { type: 'spring', stiffness: 90, damping: 16 });
     });
   }
@@ -722,7 +722,7 @@ function motionScene() {
   // défilement : les deux lignes s'écartent, le détouré monte
   scroll(animate($('.nm.l1', hero), { transform: ['translateX(0%)', 'translateX(-28%)'] }, { ease: 'linear' }), { target: hero, offset: ['start start', 'end start'] });
   scroll(animate($('.nm.l2', hero), { transform: ['translateX(0%)', 'translateX(22%)'] }, { ease: 'linear' }), { target: hero, offset: ['start start', 'end start'] });
-  if (c) scroll(animate(c, { transform: ['translateY(0%) scale(1)', 'translateY(-14%) scale(1.06)'] }, { ease: 'linear' }), { target: hero, offset: ['start start', 'end start'] });
+  if (c) scroll(animate(c, { transform: ['scale(1)', 'scale(1.08)'] }, { ease: 'linear' }), { target: hero, offset: ['start start', 'end start'] });
 }
 
 async function motion() {
