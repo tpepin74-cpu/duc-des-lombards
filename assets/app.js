@@ -402,6 +402,7 @@ function posterHero(o, label, intro = false) {
       <div class="cut-wrap"><div class="ph-photo"><img class="cut" src="${img(e.img, 960)}" alt="${esc(e.title)}" fetchpriority="high" decoding="async"></div></div>`
         : `<div class="blk" aria-hidden="true" style="left:var(--pad);top:30%;width:36%;height:38%"></div>`}
       <div class="nm l2" aria-hidden="true" style="${size}">${esc(l2 || l1)}${e.sub && !e.jam ? `<span class="sub">${esc(e.sub)}</span>` : e.jam ? `<span class="sub">${esc(e.sub)}</span>` : ''}</div>
+      ${intro ? `<a class="ph-link" href="concert.html#${esc(e.id)}" aria-label="Découvrir ${esc(title(e))}"><span class="ph-go">Découvrir l’artiste <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M3 10h14M12 5l5 5-5 5"/></svg></span></a>` : ''}
     </div>
     <div class="ph-book">
       <div class="ph-price">${e.price ? `<b class="num">${lowP(e)}–${e.price} €</b><span>Placement libre · 75 min</span>` : `<b>Libre</b><span>Consommation obligatoire</span>`}</div>

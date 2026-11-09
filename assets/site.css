@@ -712,3 +712,13 @@ main > section:last-child.sec { padding-bottom: var(--air); }
 
 /* Détourés : bords francs, aucune transparence ni fondu */
 .cut, .pcut, .stage .cut, .ph-stage .pcut, img.cut { -webkit-mask-image: none !important; mask-image: none !important; }
+
+/* Héros : toute l'affiche mène à la page de l'artiste */
+.stage .ph-link { position: absolute; inset: 0; z-index: 6; display: block; cursor: pointer; }
+.stage .ph-go { position: absolute; left: var(--pad); bottom: calc(2% + 1.1em); display: inline-flex; align-items: center; gap: .5em;
+  padding: .6em .9em; background: #0f0f0f; color: #fff; font: 700 .78rem/1 var(--f); letter-spacing: .08em; text-transform: uppercase; }
+.stage .ph-go svg { width: 1.1em; height: 1.1em; transition: transform .25s var(--io, ease); }
+.stage .ph-link:hover .ph-go, .stage .ph-link:focus-visible .ph-go { background: var(--jade); color: #0f0f0f; }
+.stage .ph-link:hover .ph-go svg { transform: translateX(4px); }
+.stage .ph-link:focus-visible { outline: 3px solid var(--jade); outline-offset: -3px; }
+@media (max-width: 1000px) { .stage .ph-go { bottom: 4%; } }
