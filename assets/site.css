@@ -694,3 +694,12 @@ main > section:last-child.sec { padding-bottom: var(--air); }
 .ph-stage { overflow: hidden; }
 .ph-stage .pcut { right: 0; bottom: -2px; object-position: bottom right;
   -webkit-mask-image: linear-gradient(to right, transparent 0, #000 16%); mask-image: linear-gradient(to right, transparent 0, #000 16%); }
+
+/* ===== v3.6 : passage vers la billetterie officielle ===== */
+.bt-memo { border: 2px solid currentColor; padding: 14px 16px; background: var(--jade); color: #0f0f0f; }
+.bt-memo .sh-label { margin: 0 0 6px; color: #0f0f0f; }
+.bt-memo p { margin: 0; font-weight: 600; line-height: 1.35; }
+.bt-memo p b { font-weight: 800; }
+.bt-memo.is-big { padding: 20px; }
+.bt-memo.is-big p { font-size: 1.15rem; }
+.bt-memo .fine { margin-top: 10px; font-size: .78rem; font-weight: 500; opacity: .8; }

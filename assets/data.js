@@ -1,7 +1,8 @@
 /* Le Duc des Lombards — données du site (reprises de ducdeslombards.com, nov. 2026).
    Statuts des sets : ok | last (dernières places) | full (complet) | door (guichet uniquement).
-   Prix : fourchette officielle 29–41 € « selon la programmation ». Les prix par concert
-   ci-dessous sont indicatifs et seront synchronisés avec la billetterie. */
+   Prix : fourchette officielle 29–41 € « selon la programmation ». Prix, statuts et
+   séances relevés sur billetterie.ducdeslombards.com le 9 nov. 2026 (price = tarif PLEIN,
+   pjc = tarif REDUIT Paris Jazz Club, jeune = tarif JEUNE). */
 
 /* Photos reprises du site actuel, recadrées en 4:3 et converties en WebP (480 / 960 px). */
 export const img = (name, w = 960) => name ? `assets/img/${name}-${w >= 700 ? 960 : 480}.webp` : null;
@@ -25,51 +26,89 @@ export const EVENTS = [
     dates: [{ d: '2026-11-06', sets: jam() }] },
   { id: 'kyle-eastwood-quintet-0', title: 'Kyle Eastwood Quintet', tag: 'Événement', price: 41, img: 'kyle',
     dates: [{ d: '2026-11-07', sets: two('full', 'full') }, { d: '2026-11-08', sets: two('full', 'full') }] },
-  { id: 'ege-turev-1', title: 'Ege Turev', tag: 'Drums newcomer', price: 29, img: 'ege',
-    dates: [{ d: '2026-11-10', sets: two('full', 'full') }] },
-  { id: 'terrace-martin-quartet', img: 'terrace', title: 'The Terrace Martin Quartet', tag: 'Groove', price: 41,
+  { id: 'ege-turev-1', title: 'Ege Turev', tag: 'Drums newcomer', price: 15, pjc: 12, img: 'ege',
+    dates: [{ d: '2026-11-10', sets: two() }] },
+  { id: 'terrace-martin-quartet', img: 'terrace', title: 'The Terrace Martin Quartet', tag: 'Groove', price: 41, pjc: 38, jeune: 34,
     dates: [{ d: '2026-11-11', sets: two('full', 'full') }] },
-  { id: 'jesse-harris-6', title: 'Jesse Harris', tag: 'Folk', price: 33, img: 'jesse',
+  { id: 'jesse-harris-6', title: 'Jesse Harris', tag: 'Folk', price: 38, pjc: 35, jeune: 31, img: 'jesse',
     dates: [{ d: '2026-11-12', sets: two() }] },
-  { id: 'ekep-nkwelle-0', title: 'Ekep Nkwelle', tag: 'Vocal', price: 33, img: 'ekep',
+  { id: 'ekep-nkwelle-0', title: 'Ekep Nkwelle', tag: 'Vocal', price: 41, pjc: 38, jeune: 34, img: 'ekep',
     dates: [{ d: '2026-11-13', sets: two('full', 'ok') }, { d: '2026-11-14', sets: two('full', 'ok') }] },
   { id: 'jam-du-duc-gael-horellou-7', jam: true, img: 'horellou', title: 'Jam du Duc', sub: 'Gaël Horellou', tag: 'Jam du Duc',
     dates: [{ d: '2026-11-13', sets: jam() }] },
   { id: 'jam-du-duc-simon-chivallon-16', jam: true, img: 'chivallon', title: 'Jam du Duc', sub: 'Simon Chivallon', tag: 'Jam du Duc',
     dates: [{ d: '2026-11-14', sets: jam() }] },
-  { id: 'leron-thomas-pan-amsterdam-and-free-band', title: 'Leron Thomas', sub: 'Pan Amsterdam and the Free Band', tag: 'Groove', price: 33, img: 'leron',
+  { id: 'leron-thomas-pan-amsterdam-and-free-band', title: 'Leron Thomas', sub: 'Pan Amsterdam and the Free Band', tag: 'Groove', price: 38, pjc: 35, jeune: 31, img: 'leron',
     dates: [{ d: '2026-11-16', sets: two() }] },
-  { id: 'eric-harland-trio-feat-baptiste-trotignon-john-leftwich', img: 'harland', title: 'Eric Harland Trio', sub: 'feat. Baptiste Trotignon & John Leftwich', tag: 'All star', price: 41,
+  { id: 'eric-harland-trio-feat-baptiste-trotignon-john-leftwich', img: 'harland', title: 'Eric Harland Trio', sub: 'feat. Baptiste Trotignon & John Leftwich', tag: 'All star', price: 41, pjc: 38, jeune: 34,
     dates: [{ d: '2026-11-17', sets: two() }, { d: '2026-11-18', sets: two() }] },
-  { id: 'pablo-campos-quintet', title: 'Pablo Campos Quintet', tag: 'Crooner', price: 33, img: 'pablo',
+  { id: 'pablo-campos-quintet', title: 'Pablo Campos Quintet', tag: 'Crooner', price: 38, pjc: 35, jeune: 31, img: 'pablo',
     dates: [{ d: '2026-11-19', sets: two() }] },
-  { id: 'antonio-farao-stephane-belmondo-quartet', img: 'belmondo', title: 'Antonio Faraò & Stéphane Belmondo Quartet', tag: 'All star', price: 41,
+  { id: 'antonio-farao-stephane-belmondo-quartet', img: 'belmondo', title: 'Antonio Faraò & Stéphane Belmondo Quartet', tag: 'All star', price: 41, pjc: 38, jeune: 34,
     dates: [{ d: '2026-11-20', sets: two() }] },
   { id: 'jam-du-duc-alex-monfort-1', jam: true, img: 'monfort', title: 'Jam du Duc', sub: 'Alex Monfort', tag: 'Jam du Duc',
     dates: [{ d: '2026-11-20', sets: jam() }] },
-  { id: 'antonio-farao-trio-3', img: 'faraotrio', title: 'Antonio Faraò Trio', tag: 'Piano master', price: 37,
+  { id: 'antonio-farao-trio-3', img: 'faraotrio', title: 'Antonio Faraò Trio', tag: 'Piano master', price: 41, pjc: 38, jeune: 34,
     dates: [{ d: '2026-11-21', sets: two() }] },
   { id: 'jam-du-duc-paul-morvan-25', jam: true, img: 'morvan', title: 'Jam du Duc', sub: 'Paul Morvan', tag: 'Jam du Duc',
     dates: [{ d: '2026-11-21', sets: jam() }] },
-  { id: 'theodore-kuzma-trio-0', title: 'Théodore Kuzma Trio', tag: 'Standards', price: 29, img: 'kuzma',
+  { id: 'theodore-kuzma-trio-0', title: 'Théodore Kuzma Trio', tag: 'Standards', price: 15, pjc: 12, img: 'kuzma',
     dates: [{ d: '2026-11-23', sets: two() }] },
-  { id: 'dave-bristow-sides', img: 'bristow', title: 'Dave Bristow', sub: 'Sides', tag: 'Piano chic', price: 29,
+  { id: 'dave-bristow-sides', img: 'bristow', title: 'Dave Bristow', sub: 'Sides', tag: 'Piano chic', price: 15, pjc: 12,
     dates: [{ d: '2026-11-24', sets: two() }] },
-  { id: 'gabi-hartmann-4', title: 'Gabi Hartmann', tag: 'Vocal', price: 37, img: 'gabi',
-    dates: ['2026-11-25', '2026-11-26', '2026-11-27', '2026-11-28'].map(d => ({ d, sets: two('full', d === '2026-11-28' ? 'last' : 'ok') })) },
+  { id: 'gabi-hartmann-4', title: 'Gabi Hartmann', tag: 'Vocal', price: 36, pjc: 33, jeune: 29, img: 'gabi',
+    dates: ['2026-11-25', '2026-11-26', '2026-11-27', '2026-11-28'].map(d => ({ d, sets: two('full', d === '2026-11-28' ? 'full' : 'ok') })) },
   { id: 'jam-du-duc-franck-amsallem-9', jam: true, img: 'amsallem', title: 'Jam du Duc', sub: 'Franck Amsallem', tag: 'Jam du Duc',
     dates: [{ d: '2026-11-27', sets: jam() }] },
   { id: 'jam-du-duc-acoustic-standards-trio-3', jam: true, img: 'acoustic', title: 'Jam du Duc', sub: 'Acoustic Standards Trio', tag: 'Jam du Duc',
     dates: [{ d: '2026-11-28', sets: jam() }] },
-  { id: 'jultrane-confirmation', title: 'Jultrane', sub: 'Confirmation', tag: "Sortie d'album", price: 29, img: 'jultrane',
+  { id: 'jultrane-confirmation', title: 'Jultrane', sub: 'Confirmation', tag: "Sortie d'album", price: 38, pjc: 35, jeune: 31, img: 'jultrane',
     dates: [{ d: '2026-11-30', sets: twoDec() }] },
-  { id: 'hugo-lippi-olha-maria', img: 'lippi', title: 'Hugo Lippi', sub: '« Olha Maria »', tag: 'Guitar master', price: 33,
+  { id: 'hugo-lippi-olha-maria', img: 'lippi', title: 'Hugo Lippi', sub: '« Olha Maria »', tag: 'Guitar master', price: 31, pjc: 28, jeune: 24,
     dates: [{ d: '2026-12-03', sets: twoDec() }] },
-  { id: 'roberto-fonseca-trio-0', img: 'fonseca', title: 'Roberto Fonseca Trio', tag: 'Comme à Cuba', price: 41,
-    dates: [{ d: '2026-12-10', sets: twoDec() }, { d: '2026-12-11', sets: twoDec('last', 'ok') }] },
-  { id: 'sarah-mckenzie-merry-christmas-sarah-mckenzie', img: 'mckenzie', title: 'Sarah McKenzie', sub: 'Merry Christmas with Sarah McKenzie', tag: 'Vocal', price: 37,
+  { id: 'roberto-fonseca-trio-0', img: 'fonseca', title: 'Roberto Fonseca Trio', tag: 'Comme à Cuba', price: 75, pjc: 72, jeune: 68,
+    dates: [{ d: '2026-12-10', sets: twoDec() }, { d: '2026-12-11', sets: twoDec('full', 'ok') }] },
+  { id: 'sarah-mckenzie-merry-christmas-sarah-mckenzie', img: 'mckenzie', title: 'Sarah McKenzie', sub: 'Merry Christmas with Sarah McKenzie', tag: 'Vocal', price: 48, pjc: 45, jeune: 41,
     dates: ['2026-12-21', '2026-12-22', '2026-12-23'].map(d => ({ d, sets: twoDec() })) },
 ];
+/* ---------- Billetterie officielle (SoTicket) ----------
+   Chaque séance a sa propre page : https://billetterie.ducdeslombards.com/agenda/<id séance>-<nom>.
+   Relevé sur la billetterie le 9 novembre 2026. Ordre : dates puis sets, comme ci-dessus. */
+const SEANCES = {
+  'ege-turev-1': ['Ege-Turev', [4095, 4096]],
+  'terrace-martin-quartet': ['The-Terrace-Martin-Quartet', [4078, 4079]],
+  'jesse-harris-6': ['Jesse-Harris', [4103, 4104]],
+  'ekep-nkwelle-0': ['Ekep-Nkwelle', [4073, 4074, 4075, 4076]],
+  'jam-du-duc-gael-horellou-7': ['JAM-DU-DUC-GAEL-HORELLOU', [4113]],
+  'jam-du-duc-simon-chivallon-16': ['JAM-DU-DUC-SIMON-CHIVALLON', [4114]],
+  'leron-thomas-pan-amsterdam-and-free-band': ['Leron-Thomas-Pan-Amsterdam-the-Free-Band', [4071, 4072]],
+  'eric-harland-trio-feat-baptiste-trotignon-john-leftwich': ['Eric-Harland-Trio-feat-Baptiste-Trotignon-John-Leftwich', [4084, 4085, 4086, 4087]],
+  'pablo-campos-quintet': ['Pablo-Campos-Quintet', [4105, 4106]],
+  'antonio-farao-stephane-belmondo-quartet': ['Antonio-Farao-Stephane-Belmondo-Quartet', [4097, 4098]],
+  'jam-du-duc-alex-monfort-1': ['JAM-DU-DUC-ALEX-MONFORT', [4126]],
+  'antonio-farao-trio-3': ['Antonio-Farao-Trio', [4099, 4100]],
+  'jam-du-duc-paul-morvan-25': ['JAM-DU-DUC-PAUL-MORVAN', [4115]],
+  'theodore-kuzma-trio-0': ['Theodore-Kuzma-Trio', [4109, 4110]],
+  'dave-bristow-sides': ['Dave-Bristow-Sides', [4101, 4102]],
+  'gabi-hartmann-4': ['Gabi-Hartmann', [3896, 3897, 3898, 3899, 3900, 3901, 3902, 3903]],
+  'jam-du-duc-franck-amsallem-9': ['JAM-DU-DUC-FRANCK-AMSALLEM', [4116]],
+  'jam-du-duc-acoustic-standards-trio-3': ['JAM-DU-DUC-ACOUSTIC-STANDARDS-TRIO', [4117]],
+  'jultrane-confirmation': ['Jultrane-Confirmation', [4080, 4081]],
+  'hugo-lippi-olha-maria': ['HUGO-LIPPI-Olha-Maria', [4124, 4125]],
+  'roberto-fonseca-trio-0': ['Roberto-Fonseca-Trio', [4089, 4090, 4091, 4092]],
+  'sarah-mckenzie-merry-christmas-sarah-mckenzie': ['SARAH-McKENZIE-Merry-Christmas-with-Sarah-McKenzie', [4118, 4119, 4120, 4121, 4122, 4123]],
+};
+for (const e of EVENTS) {
+  const m = SEANCES[e.id]; if (!m) continue;
+  const [nom, ids] = m; let i = 0;
+  e.bt = `${BILLETTERIE}agenda/${ids[0]}-${nom}`;
+  for (const o of e.dates) for (const st of o.sets) {
+    const id = ids[i++]; if (!id) continue;
+    st.sid = id;
+    if (st.s !== 'door') st.link = `${BILLETTERIE}agenda/${id}-${nom}`;
+  }
+}
+
 
 export const NEWS = [
   { title: 'Leron Thomas, Pan Amsterdam & the Free Band', img: 'leron', href: 'concert.html#leron-thomas-pan-amsterdam-and-free-band' },

@@ -67,6 +67,10 @@ const chip = (e, d, s) => {
 const chips = o => `<div class="sets">${o.sets.map(s => chip(o.e, o.d, s)).join('')}</div>`;
 const tagHtml = e => `<span class="tag ${e.jam ? 'is-jam' : e.tag === 'Événement' || e.tag === 'All star' ? 'is-duc' : ''}">${esc(e.tag)}</span>`;
 const link = e => `concert.html#${e.id}`;
+// Tarifs relevés sur la billetterie : plein / réduit (Paris Jazz Club) / jeune
+const pjcP = e => e.pjc ?? e.price - 3;
+const lowP = e => e.jeune ?? pjcP(e);
+const BT_RATE = { plein: 'Tarif PLEIN', pjc: 'Tarif RÉDUIT', jeune: 'Tarif JEUNE' };
 
 const card = o => `
 <article class="ev" data-reveal>
@@ -74,7 +78,7 @@ const card = o => `
     <span class="ev-date"><b class="num">${fmt.day(o.d)}</b><span>${fmt.wd(o.d)} ${fmt.mon(o.d)}</span></span></a>
   <div class="ev-body">
     <h3><a href="${link(o.e)}">${esc(o.e.jam ? `Jam du Duc · ${o.e.sub}` : o.e.title)}</a></h3>
-    <p class="meta">${o.e.price ? `dès ${o.e.price - 7} €` : 'Entrée libre'}</p>
+    <p class="meta">${o.e.price ? `dès ${lowP(o.e)} €` : 'Entrée libre'}</p>
   </div>
   ${chips(o)}
 </article>`;
@@ -162,7 +166,7 @@ const sheet = {
     if (!this.el) this.build();
     const e = byId(id); if (!e) return;
     const prefs = store.get('prefs', { qty: 2, rate: 'plein' });
-    this.st = { e, d, t, qty: prefs.qty, rate: prefs.rate, step: 'form' };
+    this.st = { e, d, t, qty: prefs.qty, rate: prefs.rate === 'jeune' && !e.jeune ? 'plein' : prefs.rate, step: 'form' };
     this.render();
     if (!this.el.open) { this.el.classList.remove('is-closing'); this.el.showModal(); sheetIn(this.el); }
     $('.pay', this.el)?.focus({ preventScroll: true });
@@ -173,7 +177,7 @@ const sheet = {
   },
   price() {
     const { e, rate } = this.st;
-    return rate === 'jeune' ? e.price - 7 : rate === 'pjc' ? e.price - 3 : e.price;
+    return rate === 'jeune' && e.jeune ? e.jeune : rate === 'pjc' ? pjcP(e) : e.price;
   },
   render() {
     const { e, d, t, qty, rate, step } = this.st;
@@ -183,6 +187,17 @@ const sheet = {
       <div class="sh-head"><div class="sh-thumb">${media(e, '76px')}</div>
         <div><h3 id="sh-title">${esc(e.title)}</h3><p>${esc(e.sub || e.tag)}</p></div>
         <button class="x" type="button" data-close aria-label="Fermer">${ICON_X}</button></div>`;
+    if (step === 'handoff') {
+      const url = this.link();
+      this.el.innerHTML = `<div class="sheet-in">${head}
+        <div class="bt-memo is-big" role="status"><span class="sh-label">Billetterie ouverte dans un nouvel onglet</span><p>${this.memo()}</p>
+          <p class="fine">Paiement sécurisé sur billetterie.ducdeslombards.com · billets envoyés par e-mail.</p></div>
+        <div class="row-btns"><a class="btn solid" href="${url}" target="_blank" rel="noopener">Rouvrir la billetterie</a><button class="btn ghost" type="button" data-back>Modifier</button></div>
+      </div>`;
+      $('[data-close]', this.el).addEventListener('click', () => this.close());
+      $('[data-back]', this.el).addEventListener('click', () => { this.st.step = 'form'; this.render(); });
+      return;
+    }
     if (step === 'done') {
       const code = this.st.code;
       this.el.innerHTML = `<div class="sheet-in">${head}
@@ -209,18 +224,20 @@ const sheet = {
     }).join('')}</div></div>`;
     const rateSeg = `<div><div class="sh-label">Tarif</div><div class="seg">
       <button type="button" data-rate="plein" aria-pressed="${rate === 'plein'}">Plein<small>${e.price} €</small></button>
-      <button type="button" data-rate="jeune" aria-pressed="${rate === 'jeune'}">−25 ans, étudiant<small>${e.price - 7} €</small></button>
-      <button type="button" data-rate="pjc" aria-pressed="${rate === 'pjc'}">Paris Jazz Club<small>${e.price - 3} €</small></button></div></div>`;
+      ${e.jeune ? `<button type="button" data-rate="jeune" aria-pressed="${rate === 'jeune'}">−25 ans, étudiant<small>${e.jeune} €</small></button>` : ''}
+      <button type="button" data-rate="pjc" aria-pressed="${rate === 'pjc'}">Paris Jazz Club<small>${pjcP(e)} €</small></button></div></div>`;
     const who = user
       ? `<div class="express">Réservation express · ${esc(user.email)} <button type="button" data-forget>Changer</button></div>`
       : `<div class="field" style="margin:0"><label for="sh-mail">E-mail pour recevoir vos billets</label><input id="sh-mail" type="email" autocomplete="email" inputmode="email" placeholder="vous@exemple.fr" required></div>`;
     const total = this.price() * qty;
+    const url = this.link();
+    const memo = url ? `<div class="bt-memo"><span class="sh-label">Sur la billetterie officielle</span><p>${this.memo()}</p></div>` : '';
     this.el.innerHTML = `<div class="sheet-in">${head}${dateSeg}${setSeg}${rateSeg}
       <div class="qty"><div><div class="sh-label" style="margin:0">Places</div><span class="fine">Groupe de plus de 10 : <a href="privatiser.html">tarif groupe</a></span></div>
         <div class="stepper"><button type="button" data-q="-1" aria-label="Retirer une place">−</button><output class="num" aria-live="polite">${qty}</output><button type="button" data-q="1" aria-label="Ajouter une place">+</button></div></div>
-      ${who}
+      ${url ? memo : who}
       <div class="total"><span>Total</span><b class="num" data-total>${fmt.eur(total)}</b></div>
-      <button type="button" class="btn pay"><span class="lbl">${this.link() ? 'Payer sur la billetterie' : 'Réserver'} · ${fmt.eur(total)}</span><span class="spin" aria-hidden="true"></span></button>
+      <button type="button" class="btn pay"><span class="lbl">${url ? 'Réserver sur la billetterie' : 'Réserver'} · ${fmt.eur(total)}</span><span class="spin" aria-hidden="true"></span></button>
       <p class="fine">Placement libre assis · ouverture des portes 30 min avant le set. Paiement sécurisé sur la billetterie du Duc. Billet nominatif envoyé par e-mail.</p>
     </div>`;
     this.bind();
@@ -239,14 +256,26 @@ const sheet = {
       this.st.qty = Math.min(10, Math.max(1, this.st.qty + +b.dataset.q));
       $('output', el).textContent = this.st.qty;
       const tot = fmt.eur(this.price() * this.st.qty);
-      $('[data-total]', el).textContent = tot; $('.pay .lbl', el).textContent = `${this.link() ? 'Payer sur la billetterie' : 'Réserver'} · ${tot}`;
+      $('[data-total]', el).textContent = tot; $('.pay .lbl', el).textContent = `${this.link() ? 'Réserver sur la billetterie' : 'Réserver'} · ${tot}`;
+      const m = $('.bt-memo p', el); if (m) m.innerHTML = this.memo();
     }));
     $('[data-forget]', el)?.addEventListener('click', () => { store.set('user', null); this.render(); });
     $('.pay', el).addEventListener('click', () => this.pay());
   },
+  memo() {
+    const { d, t, qty, rate } = this.st;
+    return `Ouvrez la séance du <b>${fmt.full(d)} à ${fmt.time(t)}</b>, choisissez <b>${qty} × ${BT_RATE[rate] || BT_RATE.plein}</b>, puis « Ajouter au panier ».`;
+  },
   link() { const o = this.st.e.dates.find(x => x.d === this.st.d); const st = o && o.sets.find(x => x.t === this.st.t); return st && st.link; },
   pay() {
     const el = this.el, mail = $('#sh-mail', el);
+    // Billetterie officielle : on ouvre la page exacte de la séance choisie, récap à l'appui.
+    const url = this.link();
+    if (url) {
+      store.set('prefs', { qty: this.st.qty, rate: this.st.rate });
+      window.open(url, '_blank', 'noopener');
+      this.st.step = 'handoff'; this.render(); return;
+    }
     if (mail) {
       if (!mail.checkValidity() || !mail.value.includes('.')) {
         mail.setCustomValidity('Saisissez une adresse e-mail valide pour recevoir vos billets.'); mail.reportValidity();
@@ -255,9 +284,6 @@ const sheet = {
       store.set('user', { email: mail.value.trim() });
     }
     store.set('prefs', { qty: this.st.qty, rate: this.st.rate });
-    // SoTicket : l'API est en lecture seule → la vente se finalise sur la page de la séance.
-    const url = this.link();
-    if (url) { window.open(url, '_blank', 'noopener'); this.close(); toast('Finalisez votre paiement sur la billetterie du Duc.'); return; }
     const btn = $('.pay', el); btn.classList.add('is-loading'); btn.disabled = true;
     // En production : POST vers l'API de la billetterie (Apple Pay / Google Pay / carte enregistrée).
     setTimeout(() => {
@@ -357,7 +383,7 @@ function posterHero(o, label, intro = false) {
       <div class="nm l2" aria-hidden="true" style="${size}">${esc(l2 || l1)}${e.sub && !e.jam ? `<span class="sub">${esc(e.sub)}</span>` : e.jam ? `<span class="sub">${esc(e.sub)}</span>` : ''}</div>
     </div>
     <div class="ph-book">
-      <div class="ph-price">${e.price ? `<b class="num">${e.price - 7}–${e.price} €</b><span>Placement libre · 75 min</span>` : `<b>Libre</b><span>Consommation obligatoire</span>`}</div>
+      <div class="ph-price">${e.price ? `<b class="num">${lowP(e)}–${e.price} €</b><span>Placement libre · 75 min</span>` : `<b>Libre</b><span>Consommation obligatoire</span>`}</div>
       ${chips(o)}
     </div>
   </section>`;
@@ -460,7 +486,7 @@ function concert() {
   <section class="sec"><div class="sec-head"><h2>À suivre</h2><div class="side"><a class="btn" href="agenda.html">Agenda <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 10h14M12 5l5 5-5 5"/></svg></a></div></div>${others.map(row).join('')}</section>`;
   const ld = document.createElement('script'); ld.type = 'application/ld+json';
   ld.textContent = JSON.stringify(e.dates.map(x => ({ '@context': 'https://schema.org', '@type': 'MusicEvent', name: title(e), startDate: `${x.d}T${x.sets[0].t}:00+01:00`,
-    location: { '@type': 'MusicVenue', name: 'Le Duc des Lombards', address: INFO.address }, offers: e.price ? { '@type': 'Offer', price: e.price, priceCurrency: 'EUR', url: BILLETTERIE } : undefined })));
+    location: { '@type': 'MusicVenue', name: 'Le Duc des Lombards', address: INFO.address }, offers: e.price ? { '@type': 'Offer', price: e.price, priceCurrency: 'EUR', url: e.bt || BILLETTERIE } : undefined })));
   document.head.append(ld);
 }
 
