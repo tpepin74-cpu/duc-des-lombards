@@ -165,6 +165,14 @@ const sheet = {
   open(id, d, t) {
     if (!this.el) this.build();
     const e = byId(id); if (!e) return;
+    // Séance reliée à la billetterie officielle : on y va directement, séance déjà ouverte.
+    // Tarif et nombre de places se choisissent une seule fois, sur la billetterie.
+    const occ = e.dates.find(x => x.d === d), set = occ && occ.sets.find(x => x.t === t);
+    if (set && set.link && bookable(setState(d, set))) {
+      window.open(set.link, '_blank', 'noopener');
+      toast(`Billetterie ouverte : ${fmt.full(d)}, set de ${fmt.time(t)}. Choisissez vos places.`);
+      return;
+    }
     const prefs = store.get('prefs', { qty: 2, rate: 'plein' });
     this.st = { e, d, t, qty: prefs.qty, rate: prefs.rate === 'jeune' && !e.jeune ? 'plein' : prefs.rate, step: 'form' };
     this.render();

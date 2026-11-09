@@ -105,7 +105,8 @@ for (const e of EVENTS) {
   for (const o of e.dates) for (const st of o.sets) {
     const id = ids[i++]; if (!id) continue;
     st.sid = id;
-    if (st.s !== 'door') st.link = `${BILLETTERIE}agenda/${id}-${nom}`;
+    // ?session=<id> : la billetterie ouvre directement cette séance, tarifs affichés
+    if (st.s !== 'door') st.link = `${BILLETTERIE}agenda/${id}-${nom}?session=${id}`;
   }
 }
 
