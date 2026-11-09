@@ -703,3 +703,9 @@ main > section:last-child.sec { padding-bottom: var(--air); }
 .bt-memo.is-big { padding: 20px; }
 .bt-memo.is-big p { font-size: 1.15rem; }
 .bt-memo .fine { margin-top: 10px; font-size: .78rem; font-weight: 500; opacity: .8; }
+
+/* Collage : les grands mots défilants restent TOUJOURS derrière les artistes (mobile + ordinateur) */
+.collage { isolation: isolate; }
+.collage .marq, .collage .marq.m1, .collage .marq.m2 { z-index: 0 !important; pointer-events: none; }
+.collage .pc { z-index: 2 !important; }
+.collage .head, .collage .cta { z-index: 5 !important; }
