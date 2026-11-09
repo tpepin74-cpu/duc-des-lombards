@@ -1,3 +1,4 @@
+import { syncSoTicket } from './soticket.js';
 import { EVENTS, INFO, ROOM, BILLETTERIE, CONTENT, NOCUT, img, srcset } from './data.js';
 const cut = n => n && !NOCUT.includes(n) ? `assets/img/cut/${n}.webp` : null;
 
@@ -219,7 +220,7 @@ const sheet = {
         <div class="stepper"><button type="button" data-q="-1" aria-label="Retirer une place">−</button><output class="num" aria-live="polite">${qty}</output><button type="button" data-q="1" aria-label="Ajouter une place">+</button></div></div>
       ${who}
       <div class="total"><span>Total</span><b class="num" data-total>${fmt.eur(total)}</b></div>
-      <button type="button" class="btn pay"><span class="lbl">Réserver · ${fmt.eur(total)}</span><span class="spin" aria-hidden="true"></span></button>
+      <button type="button" class="btn pay"><span class="lbl">${this.link() ? 'Payer sur la billetterie' : 'Réserver'} · ${fmt.eur(total)}</span><span class="spin" aria-hidden="true"></span></button>
       <p class="fine">Placement libre assis · ouverture des portes 30 min avant le set. Paiement sécurisé sur la billetterie du Duc. Billet nominatif envoyé par e-mail.</p>
     </div>`;
     this.bind();
@@ -238,11 +239,12 @@ const sheet = {
       this.st.qty = Math.min(10, Math.max(1, this.st.qty + +b.dataset.q));
       $('output', el).textContent = this.st.qty;
       const tot = fmt.eur(this.price() * this.st.qty);
-      $('[data-total]', el).textContent = tot; $('.pay .lbl', el).textContent = `Réserver · ${tot}`;
+      $('[data-total]', el).textContent = tot; $('.pay .lbl', el).textContent = `${this.link() ? 'Payer sur la billetterie' : 'Réserver'} · ${tot}`;
     }));
     $('[data-forget]', el)?.addEventListener('click', () => { store.set('user', null); this.render(); });
     $('.pay', el).addEventListener('click', () => this.pay());
   },
+  link() { const o = this.st.e.dates.find(x => x.d === this.st.d); const st = o && o.sets.find(x => x.t === this.st.t); return st && st.link; },
   pay() {
     const el = this.el, mail = $('#sh-mail', el);
     if (mail) {
@@ -253,6 +255,9 @@ const sheet = {
       store.set('user', { email: mail.value.trim() });
     }
     store.set('prefs', { qty: this.st.qty, rate: this.st.rate });
+    // SoTicket : l'API est en lecture seule → la vente se finalise sur la page de la séance.
+    const url = this.link();
+    if (url) { window.open(url, '_blank', 'noopener'); this.close(); toast('Finalisez votre paiement sur la billetterie du Duc.'); return; }
     const btn = $('.pay', el); btn.classList.add('is-loading'); btn.disabled = true;
     // En production : POST vers l'API de la billetterie (Apple Pay / Google Pay / carte enregistrée).
     setTimeout(() => {
@@ -336,7 +341,7 @@ function posterHero(o, label, intro = false) {
   const e = o.e, name = e.jam ? 'Jam du Duc' : e.title;
   const [l1, l2] = splitName(name.replace(' & ', ' & '));
   const fs = Math.max(...[l1, l2].map(x => x.length));
-  const size = `font-size:min(${(172 / Math.max(fs, 5)).toFixed(1)}vw, 24rem)`;
+  const size = `font-size:min(${(118 / Math.max(fs, 5)).toFixed(1)}vw, 15rem, 24svh)`;
   return `<section class="poster-hero" data-hero aria-labelledby="ph-title">
     ${intro ? `<p class="ph-id"><span class="ph-id-a">Club de jazz</span><span class="ph-id-b">Paris · Châtelet</span><span class="ph-id-c">2 concerts par soir · depuis les années 80</span></p>` : ''}
     <div class="ph-meta"><span class="lab"><span class="eq" data-lottie="equalizer" aria-hidden="true"></span>${esc(label)}</span>
@@ -371,7 +376,7 @@ function home() {
   if (cl) {
     const seen = new Set();
     const picks = upcoming().filter(o => cut(o.e.img) && !o.e.jam && o.e.id !== n?.e.id && !seen.has(o.e.id) && seen.add(o.e.id)).slice(0, 5);
-    const L = [ { l: 1, t: 8, w: 36, bg: 'var(--jade)', s: .6 }, { l: 33, t: 36, w: 30, bg: '#fff', s: 1.2 }, { l: 60, t: 4, w: 34, bg: 'var(--sapphire)', s: .8 }, { l: 66, t: 50, w: 32, bg: '#000', s: 1.4 }, { l: 4, t: 56, w: 30, bg: 'var(--sapphire)', s: 1.0 } ];
+    const L = [ { l: 1, t: 8, w: 36, bg: 'var(--jade)', s: .6 }, { l: 33, t: 36, w: 30, bg: '#fff', s: 1.2 }, { l: 60, t: 4, w: 34, bg: '#fff', s: .8 }, { l: 66, t: 50, w: 32, bg: '#000', s: 1.4 }, { l: 4, t: 56, w: 30, bg: '#0f0f0f', s: 1.0 } ];
     cl.insertAdjacentHTML('beforeend', picks.map((o, i) => { const p = L[i]; const st = o.sets.find(x => bookable(setState(o.d, x)));
       return `<div class="pc" data-speed="${p.s}" style="left:${p.l}%;top:${p.t}%;width:${p.w}%">
       <a href="${link(o.e)}" style="display:block;position:relative;text-decoration:none;color:inherit">
@@ -824,6 +829,7 @@ function quote() {
 }
 
 /* ============ Boot ============ */
+try { await syncSoTicket(EVENTS); } catch (err) { console.warn('SoTicket indisponible, données de démonstration', err); }
 header();
 const page = document.body.dataset.page;
 ({ home, agenda, concert })[page]?.();
