@@ -463,9 +463,9 @@ dialog::backdrop { background: rgba(0, 0, 0, .25); }
 @media (max-width: 800px) {
   .collage { height: auto; padding: 90px 0 200px; display: flex; flex-direction: column; }
   .collage .pc { position: relative; left: auto !important; top: auto !important; width: 86% !important; margin-top: -40px; }
-  .collage .pc:nth-of-type(odd) { align-self: flex-start; margin-left: -4%; }
-  .collage .pc:nth-of-type(even) { align-self: flex-end; margin-right: -4%; }
-  .collage .pc:first-of-type { margin-top: 0; }
+  .collage .pc1, .collage .pc3, .collage .pc5 { align-self: flex-start; margin-left: -4%; }
+  .collage .pc2, .collage .pc4 { align-self: flex-end; margin-right: -4%; }
+  .collage .pc1 { margin-top: 0; }
   .collage .pc .lb { font-size: 1.6rem; left: 8px; }
   .collage .marq.m1 { top: 40px; }
   .collage .marq.m2 { bottom: 70px; }
@@ -482,8 +482,8 @@ dialog::backdrop { background: rgba(0, 0, 0, .25); }
   .ph-book .ph-price { padding: 12px var(--pad); flex-direction: row; align-items: baseline; gap: 12px; }
   .ph-book .ph-price b { font-size: 2rem; }
   .ph-book .set { min-height: 84px; }
-  .collage .pc:nth-of-type(even) { margin-right: 0; }
-  .collage .pc:nth-of-type(odd) { margin-left: 0; }
+  .collage .pc2, .collage .pc4 { margin-right: 0; }
+  .collage .pc1, .collage .pc3, .collage .pc5 { margin-left: 0; }
   .collage .pc .bk { right: 8px; bottom: 6%; font-size: 1.5rem; padding: 10px 14px; }
   .collage .pc .lb { left: 8px; bottom: auto; top: 14%; }
   .collage .cta { bottom: 24px; }
@@ -676,30 +676,61 @@ main > section:last-child.sec { padding-bottom: var(--air); }
 .stage .nm .sub { color: #fff; }
 @media (max-width: 800px) { .stage .nm { font-size: max(12vw, var(--nm, 0px)) !important; } }
 
-/* ===== v3.5 : survols lisibles + détourés collés aux bords ===== */
-/* Boutons horaires du héros : remplissage noir, texte néon (plus de blanc sur blanc) */
-.ph-book .set::before { background: #0f0f0f; }
-@media (hover: hover) and (pointer: fine) {
-  .ph-book .set.is-ok:hover, .ph-book .set.is-last:hover,
-  .ph-book .set.is-ok:hover small, .ph-book .set.is-last:hover small { color: var(--jade); }
-  .ph-book .set.is-last:hover small { background: transparent; }
-}
-/* Détouré du héros : posé sur le bas et calé à droite, bords francs hors champ */
-.stage { overflow: hidden; }
-.stage .cut-wrap { inset: 0 -24px -4px 0; }
-.stage .cut { left: auto; right: 0; bottom: 0; translate: none !important; transform-origin: 100% 100%;
-  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 16%); mask-image: linear-gradient(to right, transparent 0, #000 16%); }
-.ph-photo img.cut { -webkit-mask-image: none; mask-image: none; }
-/* Détourés des pages intérieures : collés au bas et au bord droit */
-.ph-stage { overflow: hidden; }
-.ph-stage .pcut { right: 0; bottom: -2px; object-position: bottom right;
-  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 16%); mask-image: linear-gradient(to right, transparent 0, #000 16%); }
+/* =================== Polish ordinateur (≥ 1001 px) =================== */
+.stage .nm { font-size: min(var(--m), 15rem, 24svh); }
+.bot-hint { right: 0; bottom: 64px; height: 48px; }
+@media (min-width: 1001px) {
+  :root { --pad: clamp(40px, 5vw, 96px); --air: clamp(110px, 10vw, 170px); }
 
-/* ===== v3.6 : passage vers la billetterie officielle ===== */
-.bt-memo { border: 2px solid currentColor; padding: 14px 16px; background: var(--jade); color: #0f0f0f; }
-.bt-memo .sh-label { margin: 0 0 6px; color: #0f0f0f; }
-.bt-memo p { margin: 0; font-weight: 600; line-height: 1.35; }
-.bt-memo p b { font-weight: 800; }
-.bt-memo.is-big { padding: 20px; }
-.bt-memo.is-big p { font-size: 1.15rem; }
-.bt-memo .fine { margin-top: 10px; font-size: .78rem; font-weight: 500; opacity: .8; }
+  /* Affiche : le nom vit à gauche, l'artiste à droite — plus rien ne passe sur un visage */
+  .stage .nm { font-size: min(var(--d), 12.5rem, 26svh); right: auto; max-width: 60%; text-align: left !important; }
+  .stage .nm.l1 { top: 7%; }
+  .stage .nm.l2 { bottom: 7%; left: 0; }
+  .stage .nm .sub { display: block; margin: .18em 0 0; font-size: .2em; max-width: 30ch; }
+  .stage .blk { left: 60% !important; top: 12% !important; width: 20% !important; height: 70% !important; }
+  .stage .cut { left: 72%; height: 98%; }
+  .ph-photo { right: var(--pad); width: min(36%, 540px); bottom: 10%; }
+
+  /* Collage : grille décalée, aucune étiquette ni bouton masqué */
+  .collage { height: auto; display: grid; grid-template-columns: repeat(12, 1fr); column-gap: 2vw; align-items: start; padding: 170px var(--pad) 220px; }
+  .collage .pc { position: relative; left: auto !important; top: auto !important; width: auto !important; }
+  .collage .pc1 { grid-column: 1 / 5; margin-top: 0; }
+  .collage .pc2 { grid-column: 5 / 9; margin-top: 16vw; }
+  .collage .pc3 { grid-column: 9 / 13; margin-top: 4vw; }
+  .collage .pc4 { grid-column: 2 / 6; margin-top: 6vw; }
+  .collage .pc5 { grid-column: 8 / 12; margin-top: -2vw; }
+  .collage .marq { z-index: 1 !important; opacity: .95; }
+  .collage .marq.m1 { top: 70px; }
+  .collage .marq.m2 { bottom: 40px; }
+  .collage .pc { z-index: 3; }
+  .collage .head { z-index: 6; }
+  .collage .cta { z-index: 6; }
+  .collage .pc .lb { font-size: 1.7rem; }
+
+  /* Lignes d'agenda : plus d'air, cibles plus grandes */
+  .row { grid-template-columns: 220px 150px minmax(0, 1fr) auto; }
+  .row > .rt { min-height: 200px; }
+  .row > * { padding-top: 34px; padding-bottom: 34px; }
+  .row h3 { font-size: clamp(2.2rem, 3.4vw, 3.4rem); }
+  .row .meta { font-size: .8rem; margin-top: 12px; }
+  .row .set { min-width: 150px; min-height: 84px; }
+  .row .set b { font-size: 2rem; }
+  .row .sets { padding-right: var(--pad); }
+  .sec-head h2 { font-size: clamp(4rem, 7vw, 7.5rem); }
+
+  /* Fiche concert */
+  .about .cell { padding-top: 64px; padding-bottom: 64px; }
+  .about-lede { font-size: clamp(1.5rem, 2vw, 2.1rem); max-width: 30ch; }
+  .vp { max-height: 78svh; }
+  .g12 .cell { padding: clamp(40px, 4vw, 72px) var(--pad); }
+  .jam-band h2 { font-size: clamp(5rem, 8vw, 9rem); }
+}
+@media (min-width: 1001px) {
+  .stage .nm { font-size: min(var(--d), 13.5rem, 27svh); max-width: 62%; }
+  .collage { row-gap: 6vw; }
+  .collage .pc3 { grid-column: 9 / 13; margin-top: 8vw; }
+  .collage .pc4 { grid-column: 1 / 5; margin-top: 4vw; }
+  .collage .pc5 { grid-column: 7 / 11; margin-top: 10vw; }
+  .collage .pc img { max-height: 70svh; width: auto; max-width: 100%; margin: 0 auto; }
+}
+a.huge { white-space: nowrap; font-size: clamp(2.6rem, 5.4vw, 6rem); }
