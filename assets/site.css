@@ -709,3 +709,6 @@ main > section:last-child.sec { padding-bottom: var(--air); }
 .collage .marq, .collage .marq.m1, .collage .marq.m2 { z-index: 0 !important; pointer-events: none; }
 .collage .pc { z-index: 2 !important; }
 .collage .head, .collage .cta { z-index: 5 !important; }
+
+/* Détourés : bords francs, aucune transparence ni fondu */
+.cut, .pcut, .stage .cut, .ph-stage .pcut, img.cut { -webkit-mask-image: none !important; mask-image: none !important; }

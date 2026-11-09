@@ -1,4 +1,5 @@
 import { syncSoTicket } from './soticket.js';
+import { addToCart, warmCart } from './cart.js';
 import { EVENTS, INFO, ROOM, BILLETTERIE, CONTENT, NOCUT, img, srcset } from './data.js';
 const cut = n => n && !NOCUT.includes(n) ? `assets/img/cut/${n}.webp` : null;
 
@@ -167,12 +168,7 @@ const sheet = {
     const e = byId(id); if (!e) return;
     // Séance reliée à la billetterie officielle : on y va directement, séance déjà ouverte.
     // Tarif et nombre de places se choisissent une seule fois, sur la billetterie.
-    const occ = e.dates.find(x => x.d === d), set = occ && occ.sets.find(x => x.t === t);
-    if (set && set.link && bookable(setState(d, set))) {
-      window.open(set.link, '_blank', 'noopener');
-      toast(`Billetterie ouverte : ${fmt.full(d)}, set de ${fmt.time(t)}. Choisissez vos places.`);
-      return;
-    }
+    warmCart();
     const prefs = store.get('prefs', { qty: 2, rate: 'plein' });
     this.st = { e, d, t, qty: prefs.qty, rate: prefs.rate === 'jeune' && !e.jeune ? 'plein' : prefs.rate, step: 'form' };
     this.render();
@@ -198,9 +194,9 @@ const sheet = {
     if (step === 'handoff') {
       const url = this.link();
       this.el.innerHTML = `<div class="sheet-in">${head}
-        <div class="bt-memo is-big" role="status"><span class="sh-label">Billetterie ouverte dans un nouvel onglet</span><p>${this.memo()}</p>
-          <p class="fine">Paiement sécurisé sur billetterie.ducdeslombards.com · billets envoyés par e-mail.</p></div>
-        <div class="row-btns"><a class="btn solid" href="${url}" target="_blank" rel="noopener">Rouvrir la billetterie</a><button class="btn ghost" type="button" data-back>Modifier</button></div>
+        <div class="bt-memo is-big" role="status"><span class="sh-label">${this.st.added ? 'Ajouté au panier' : 'Billetterie ouverte dans un nouvel onglet'}</span><p>${this.st.added ? `<b>${this.st.qty} × ${BT_RATE[this.st.rate] || BT_RATE.plein}</b> · ${fmt.full(this.st.d)} à ${fmt.time(this.st.t)}. Votre panier est ouvert : il ne reste qu’à payer.` : this.memo()}</p>
+          <p class="fine">Paiement sécurisé sur billetterie.ducdeslombards.com · places gardées 30 min · billets envoyés par e-mail.</p></div>
+        <div class="row-btns"><a class="btn solid" href="${this.st.cartUrl || url}" target="_blank" rel="noopener">${this.st.added ? 'Ouvrir le panier' : 'Rouvrir la billetterie'}</a><button class="btn ghost" type="button" data-back>Modifier</button></div>
       </div>`;
       $('[data-close]', this.el).addEventListener('click', () => this.close());
       $('[data-back]', this.el).addEventListener('click', () => { this.st.step = 'form'; this.render(); });
@@ -239,13 +235,13 @@ const sheet = {
       : `<div class="field" style="margin:0"><label for="sh-mail">E-mail pour recevoir vos billets</label><input id="sh-mail" type="email" autocomplete="email" inputmode="email" placeholder="vous@exemple.fr" required></div>`;
     const total = this.price() * qty;
     const url = this.link();
-    const memo = url ? `<div class="bt-memo"><span class="sh-label">Sur la billetterie officielle</span><p>${this.memo()}</p></div>` : '';
+    const memo = url ? `<p class="fine">Vos places sont ajoutées directement au panier de la billetterie officielle.</p>` : '';
     this.el.innerHTML = `<div class="sheet-in">${head}${dateSeg}${setSeg}${rateSeg}
       <div class="qty"><div><div class="sh-label" style="margin:0">Places</div><span class="fine">Groupe de plus de 10 : <a href="privatiser.html">tarif groupe</a></span></div>
         <div class="stepper"><button type="button" data-q="-1" aria-label="Retirer une place">−</button><output class="num" aria-live="polite">${qty}</output><button type="button" data-q="1" aria-label="Ajouter une place">+</button></div></div>
       ${url ? memo : who}
       <div class="total"><span>Total</span><b class="num" data-total>${fmt.eur(total)}</b></div>
-      <button type="button" class="btn pay"><span class="lbl">${url ? 'Réserver sur la billetterie' : 'Réserver'} · ${fmt.eur(total)}</span><span class="spin" aria-hidden="true"></span></button>
+      <button type="button" class="btn pay"><span class="lbl">${url ? 'Ajouter au panier' : 'Réserver'} · ${fmt.eur(total)}</span><span class="spin" aria-hidden="true"></span></button>
       <p class="fine">Placement libre assis · ouverture des portes 30 min avant le set. Paiement sécurisé sur la billetterie du Duc. Billet nominatif envoyé par e-mail.</p>
     </div>`;
     this.bind();
@@ -264,7 +260,7 @@ const sheet = {
       this.st.qty = Math.min(10, Math.max(1, this.st.qty + +b.dataset.q));
       $('output', el).textContent = this.st.qty;
       const tot = fmt.eur(this.price() * this.st.qty);
-      $('[data-total]', el).textContent = tot; $('.pay .lbl', el).textContent = `${this.link() ? 'Réserver sur la billetterie' : 'Réserver'} · ${tot}`;
+      $('[data-total]', el).textContent = tot; $('.pay .lbl', el).textContent = `${this.link() ? 'Ajouter au panier' : 'Réserver'} · ${tot}`;
       const m = $('.bt-memo p', el); if (m) m.innerHTML = this.memo();
     }));
     $('[data-forget]', el)?.addEventListener('click', () => { store.set('user', null); this.render(); });
@@ -281,8 +277,18 @@ const sheet = {
     const url = this.link();
     if (url) {
       store.set('prefs', { qty: this.st.qty, rate: this.st.rate });
-      window.open(url, '_blank', 'noopener');
-      this.st.step = 'handoff'; this.render(); return;
+      const o = this.st.e.dates.find(x => x.d === this.st.d), set = o && o.sets.find(x => x.t === this.st.t);
+      // Onglet ouvert dans le geste du clic (anti-bloqueur), rempli une fois le panier prêt.
+      const w = window.open('', '_blank');
+      const btn = $('.pay', el); btn.classList.add('is-loading'); btn.disabled = true;
+      const go = (u, added) => {
+        if (w && !w.closed) w.location.href = u; else window.open(u, '_blank', 'noopener');
+        Object.assign(this.st, { step: 'handoff', added, cartUrl: added ? u : null }); this.render();
+      };
+      addToCart(set.sid, this.st.qty, this.st.rate)
+        .then(cartUrl => go(cartUrl, true))
+        .catch(() => go(url, false));
+      return;
     }
     if (mail) {
       if (!mail.checkValidity() || !mail.value.includes('.')) {
