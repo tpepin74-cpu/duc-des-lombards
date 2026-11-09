@@ -341,7 +341,7 @@ function posterHero(o, label, intro = false) {
   const e = o.e, name = e.jam ? 'Jam du Duc' : e.title;
   const [l1, l2] = splitName(name.replace(' & ', ' & '));
   const fs = Math.max(...[l1, l2].map(x => x.length));
-  const size = `font-size:min(${(118 / Math.max(fs, 5)).toFixed(1)}vw, 15rem, 24svh)`;
+  const size = `--d:${(92 / Math.max(fs, 5)).toFixed(2)}vw;--m:${(118 / Math.max(fs, 5)).toFixed(2)}vw`;
   return `<section class="poster-hero" data-hero aria-labelledby="ph-title">
     ${intro ? `<p class="ph-id"><span class="ph-id-a">Club de jazz</span><span class="ph-id-b">Paris · Châtelet</span><span class="ph-id-c">2 concerts par soir · depuis les années 80</span></p>` : ''}
     <div class="ph-meta"><span class="lab"><span class="eq" data-lottie="equalizer" aria-hidden="true"></span>${esc(label)}</span>
@@ -378,7 +378,7 @@ function home() {
     const picks = upcoming().filter(o => cut(o.e.img) && !o.e.jam && o.e.id !== n?.e.id && !seen.has(o.e.id) && seen.add(o.e.id)).slice(0, 5);
     const L = [ { l: 1, t: 8, w: 36, bg: 'var(--jade)', s: .6 }, { l: 33, t: 36, w: 30, bg: '#fff', s: 1.2 }, { l: 60, t: 4, w: 34, bg: '#fff', s: .8 }, { l: 66, t: 50, w: 32, bg: '#000', s: 1.4 }, { l: 4, t: 56, w: 30, bg: '#0f0f0f', s: 1.0 } ];
     cl.insertAdjacentHTML('beforeend', picks.map((o, i) => { const p = L[i]; const st = o.sets.find(x => bookable(setState(o.d, x)));
-      return `<div class="pc" data-speed="${p.s}" style="left:${p.l}%;top:${p.t}%;width:${p.w}%">
+      return `<div class="pc pc${i + 1}" data-speed="${p.s}" style="left:${p.l}%;top:${p.t}%;width:${p.w}%">
       <a href="${link(o.e)}" style="display:block;position:relative;text-decoration:none;color:inherit">
         <span class="bg" aria-hidden="true" style="background:${p.bg};left:10%;right:10%;top:16%;bottom:0"></span>
         <img src="${cut(o.e.img)}" alt="${esc(o.e.title)}" loading="lazy" decoding="async">
@@ -628,7 +628,7 @@ function bot() {
   $('form', p).addEventListener('submit', e => { e.preventDefault(); const v = input.value.trim(); if (!v) return; input.value = ''; reply(v); });
   // bring the booking sheet above the chat
   p.addEventListener('click', e => { if (e.target.closest('[data-book],[data-wait]') && innerWidth < 760) open(false); });
-  if (!store.get('hinted', false)) setTimeout(() => { if (!p.classList.contains('is-open')) { hint.classList.add('is-on'); store.set('hinted', true); setTimeout(() => hint.classList.remove('is-on'), 6000); } }, 4000);
+  if (false) setTimeout(() => { if (!p.classList.contains('is-open')) { hint.classList.add('is-on'); store.set('hinted', true); setTimeout(() => hint.classList.remove('is-on'), 6000); } }, 4000);
   document.addEventListener('click', e => { if (e.target.closest('[data-open-bot]')) { e.preventDefault(); open(true); } });
 }
 
