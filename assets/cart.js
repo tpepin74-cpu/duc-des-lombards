@@ -12,6 +12,16 @@ const B = BILLETTERIE.replace(/\/$/, '');
 const RATE_RE = { plein: /PLEIN/i, pjc: /R[ÉE]DUIT/i, jeune: /JEUNE/i };
 let tokenP = null;
 
+/*
+ * Passerelle billetterie (billetterie/duc-bridge.js) : passez à true une fois le script installé
+ * sur billetterie.ducdeslombards.com. L'ajout direct au panier marche alors depuis n'importe quel
+ * domaine (GitHub Pages compris), sans appel cross-origin.
+ */
+export const BRIDGE_INSTALLED = false;
+const BT_RATE_KEY = { plein: 'plein', pjc: 'reduit', jeune: 'jeune' };
+export const sameSite = () => /(^|\.)ducdeslombards\.com$/.test(location.hostname);
+export const bridgeUrl = (sid, qty, rate = 'plein') => `${B}/cart#duc-add=${+sid}.${BT_RATE_KEY[rate] || 'plein'}.${Math.min(10, Math.max(1, qty))}`;
+
 async function token() {
   if (!tokenP) tokenP = fetch(B + '/cart', { credentials: 'include' })
     .then(r => r.text())
@@ -46,4 +56,4 @@ export async function addToCart(sid, qty, rate = 'plein') {
 }
 
 /** Préchauffe le jeton (au survol / à l'ouverture du panneau) pour un ajout quasi instantané. */
-export function warmCart() { token().catch(() => {}); }
+export function warmCart() { if (sameSite()) token().catch(() => {}); }

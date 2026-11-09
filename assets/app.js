@@ -1,5 +1,5 @@
 import { syncSoTicket } from './soticket.js';
-import { addToCart, warmCart } from './cart.js';
+import { addToCart, warmCart, sameSite, bridgeUrl, BRIDGE_INSTALLED } from './cart.js';
 import { EVENTS, INFO, ROOM, BILLETTERIE, CONTENT, NOCUT, img, srcset } from './data.js';
 const cut = n => n && !NOCUT.includes(n) ? `assets/img/cut/${n}.webp` : null;
 
@@ -278,6 +278,13 @@ const sheet = {
     if (url) {
       store.set('prefs', { qty: this.st.qty, rate: this.st.rate });
       const o = this.st.e.dates.find(x => x.d === this.st.d), set = o && o.sets.find(x => x.t === this.st.t);
+      if (set.sid && !sameSite()) {
+        // Hors ducdeslombards.com : la passerelle installée sur la billetterie ajoute et ouvre le panier.
+        const u = BRIDGE_INSTALLED ? bridgeUrl(set.sid, this.st.qty, this.st.rate) : url;
+        window.open(u, '_blank');
+        Object.assign(this.st, { step: 'handoff', added: BRIDGE_INSTALLED, cartUrl: BRIDGE_INSTALLED ? BILLETTERIE + 'cart' : null }); this.render();
+        return;
+      }
       // Onglet ouvert dans le geste du clic (anti-bloqueur), rempli une fois le panier prêt.
       const w = window.open('', '_blank');
       const btn = $('.pay', el); btn.classList.add('is-loading'); btn.disabled = true;
