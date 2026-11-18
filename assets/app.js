@@ -426,7 +426,7 @@ function home() {
     const picks = upcoming().filter(o => cut(o.e.img) && !o.e.jam && o.e.id !== n?.e.id && !seen.has(o.e.id) && seen.add(o.e.id)).slice(0, 5);
     const L = [ { l: 1, t: 8, w: 36, bg: 'var(--jade)', s: .6 }, { l: 33, t: 36, w: 30, bg: '#fff', s: 1.2 }, { l: 60, t: 4, w: 34, bg: '#fff', s: .8 }, { l: 66, t: 50, w: 32, bg: '#000', s: 1.4 }, { l: 4, t: 56, w: 30, bg: '#0f0f0f', s: 1.0 } ];
     cl.insertAdjacentHTML('beforeend', picks.map((o, i) => { const p = L[i]; const st = o.sets.find(x => bookable(setState(o.d, x)));
-      return `<div class="pc" data-speed="${p.s}" style="left:${p.l}%;top:${p.t}%;width:${p.w}%">
+      return `<div class="pc pc${i + 1}" data-speed="${p.s}" style="left:${p.l}%;top:${p.t}%;width:${p.w}%">
       <a href="${link(o.e)}" style="display:block;position:relative;text-decoration:none;color:inherit">
         <span class="bg" aria-hidden="true" style="background:${p.bg};left:10%;right:10%;top:16%;bottom:0"></span>
         <img src="${cut(o.e.img)}" alt="${esc(o.e.title)}" loading="lazy" decoding="async">
@@ -796,7 +796,8 @@ async function motion() {
     scroll(animate($('.marq.m2', cl), { transform: ['translateX(-45%)', 'translateX(5%)'] }, { ease: 'linear' }), { target: cl, offset: ['start end', 'end start'] });
     $$('.pc', cl).forEach((p, i) => {
       const sp = +p.dataset.speed || 1;
-      scroll(animate(p, { transform: [`translateY(${80 * sp}px) rotate(${(i % 2 ? 1 : -1) * 3 * sp}deg)`, `translateY(${-80 * sp}px) rotate(0deg)`] }, { ease: 'linear' }), { target: cl, offset: ['start end', 'end start'] });
+      const amp = innerWidth > 800 ? 36 : 80, rot = innerWidth > 800 ? 1.2 : 3;
+      scroll(animate(p, { transform: [`translateY(${amp * sp}px) rotate(${(i % 2 ? 1 : -1) * rot * sp}deg)`, `translateY(${-amp * sp}px) rotate(0deg)`] }, { ease: 'linear' }), { target: cl, offset: ['start end', 'end start'] });
       inView(p, () => { animate($('img', p), { clipPath: ['inset(100% 0 0 0)', 'inset(0% 0 0 0)'] }, { duration: 1, delay: i * .08, ease: IO }); animate($('.bg', p), { transform: ['scaleX(0)', 'scaleX(1)'] }, { duration: .8, delay: i * .08, ease: IO }); animate($('.lb', p), { clipPath: ['inset(0 100% 0 0)', 'inset(0 0% 0 0)'] }, { duration: .6, delay: .5 + i * .08, ease: IO }); });
     });
   }

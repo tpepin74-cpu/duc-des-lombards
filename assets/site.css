@@ -722,3 +722,24 @@ main > section:last-child.sec { padding-bottom: var(--air); }
 .stage .ph-link:hover .ph-go svg { transform: translateX(4px); }
 .stage .ph-link:focus-visible { outline: 3px solid var(--jade); outline-offset: -3px; }
 @media (max-width: 1000px) { .stage .ph-go { bottom: 4%; } }
+
+/* ===== Collage ordinateur : grille éditoriale, aucun chevauchement entre artistes ===== */
+@media (min-width: 801px) {
+  .collage { height: auto; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: clamp(20px, 2.6vw, 48px); row-gap: clamp(110px, 10vw, 180px);
+    align-items: end; padding: clamp(150px, 15vw, 240px) var(--pad) clamp(190px, 18vw, 280px); }
+  .collage .pc { position: relative; left: auto !important; top: auto !important; width: auto !important; margin: 0; }
+  .collage .pc img { width: 100%; height: auto; max-height: 74vh; object-fit: contain; object-position: bottom center; }
+  .collage .pc1 { grid-column: 1 / 6;  grid-row: 1; }
+  .collage .pc2 { grid-column: 7 / 10; grid-row: 1; align-self: start; margin-top: clamp(60px, 8vw, 140px); }
+  .collage .pc3 { grid-column: 10 / 13; grid-row: 1; align-self: start; }
+  .collage .pc4 { grid-column: 2 / 6;  grid-row: 2; }
+  .collage .pc5 { grid-column: 7 / 12; grid-row: 2; align-self: start; margin-top: clamp(40px, 5vw, 90px); }
+  .collage .pc .lb { left: 0; bottom: 6%; max-width: 100%; white-space: normal; }
+  .collage .pc .bk { right: 0; bottom: 6%; }
+  .collage .head { top: clamp(40px, 5vw, 72px); }
+}
+@media (min-width: 801px) {
+  .collage { row-gap: clamp(70px, 6vw, 120px); }
+  .collage .pc .bg { bottom: 5% !important; }
+}
+@media (max-width: 800px) { .collage .pc { margin-top: 64px; } .collage .pc:first-of-type { margin-top: 0; } }
