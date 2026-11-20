@@ -505,3 +505,28 @@ dialog::backdrop { background: rgba(20, 20, 20, .4); }
   .cc h3 { font-size: 1.1rem; }
   .cc-media { aspect-ratio: auto; }
 }
+
+/* ---------- Alignement parfait des vignettes (ordinateur, tablette) ----------
+   Chaque carte partage les mêmes pistes que ses voisines de rangée (subgrid) :
+   photo, date, nom, sous-titre, horaires et mention jam tombent exactement à la même hauteur. */
+@media (min-width: 701px) {
+  .grid { align-items: stretch; }
+  .grid > .cc { display: grid; grid-row: span 6; grid-template-rows: subgrid; row-gap: 0; }
+  .grid > .cc > .cc-body { display: contents; }
+  .grid > .cc .cc-media { grid-row: 1; }
+  .grid > .cc .cc-date  { grid-row: 2; padding-top: 12px; align-self: end; }
+  .grid > .cc h3        { grid-row: 3; padding-top: 6px; align-self: start; }
+  .grid > .cc .cc-sub   { grid-row: 4; padding-top: 6px; align-self: start; }
+  .grid > .cc .sets     { grid-row: 5; margin: 0; padding-top: 12px; align-self: start; }
+  .grid > .cc .cc-jam   { grid-row: 6; padding-top: 8px; align-self: start; }
+  .grid > .cc.is-jam .cc-jam { grid-row: 5; margin: 12px 0 0; }
+  /* vue liste : retour à la mise en ligne */
+  [data-agenda][data-v="list"] .grid > .cc { grid-row: auto; grid-template-rows: none; row-gap: 0; }
+  [data-agenda][data-v="list"] .grid > .cc > .cc-body { display: grid; }
+  [data-agenda][data-v="list"] .grid > .cc .cc-media { grid-row: auto; }
+  [data-agenda][data-v="list"] .grid > .cc :is(.cc-date, h3, .cc-sub, .sets, .cc-jam) { grid-row: auto; padding-top: 0; }
+  [data-agenda][data-v="list"] .grid > .cc h3 { align-self: end; }
+}
+.cc-date { line-height: 18px; min-height: 18px; }
+.cc-date .nd { height: 18px; line-height: 18px; padding: 0 6px; vertical-align: top; font-size: .8em; }
+@media (min-width: 701px) { .grid > .cc .cc-date { align-self: start; } }
