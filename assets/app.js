@@ -124,13 +124,12 @@ const card = (o, { eager = false } = {}) => {
   const range = multi ? (EN ? `<span class="dl"><b>${fmt.day(ds[0])}</b>–<b>${fmt.day(ds.at(-1))} ${fmt.monLong(ds.at(-1))}</b></span>` : `<span class="dl">Du <b>${fmt.day(ds[0])}</b> au <b>${fmt.day(ds.at(-1))} ${fmt.monLong(ds.at(-1))}</b></span>`) : dateLine(o.d);
   return `<article class="cc${e.jam ? ' is-jam' : ''}" style="${gvars(e)}" data-g="${e.genre}" data-month="${o.d.slice(0, 7)}" data-d="${ds.join(' ')}"
     data-search="${esc(norm(`${e.title} ${e.sub || ''} ${e.tag} ${gc(e).label}`))}" data-avail="${(o.occs || [o]).some(x => x.sets.some(s => bookable(setState(x.d, s)))) ? 1 : 0}">
-    <div class="cc-media">${media(e, '(max-width: 700px) 96px, (max-width: 1300px) 25vw, 20vw', eager)}${e.jam ? '' : badge(e)}${w ? `<span class="when">${w}</span>` : ''}</div>
+    <div class="cc-media">${media(e, '(max-width: 700px) 96px, (max-width: 1300px) 33vw, 25vw', eager)}${w ? `<span class="when">${w}</span>` : ''}</div>
     <div class="cc-body">
       <p class="cc-date">${range}${multi ? `<span class="nd">${ds.length} ${T('soirs')}</span>` : ''}</p>
       <h3><a class="cc-link" href="${link(e)}" aria-label="${esc(name(e))} : ${T('Voir l’artiste')}">${esc(name(e))}<span class="go" aria-hidden="true">${AR}</span></a></h3>
       <p class="cc-sub"><span class="gl">${esc(gc(e).label)}</span>${e.jam ? `${T('avec')} ${esc(e.sub)}` : `${e.sub ? `<span class="s">${esc(e.sub)}</span>` : ''}<span class="cc-p">${e.price} €</span>`}</p>
       ${e.jam ? `<p class="cc-jam">${T('23:30 · entrée libre · sans réservation')}</p>` : chips(o)}
-      ${j ? `<p class="cc-jam">${T('Puis')} <b>Jam du Duc</b> · 23:30 · ${esc(j.e.sub)}</p>` : ''}
     </div>
   </article>`;
 };
@@ -203,11 +202,9 @@ function agenda() {
       `<button class="chip" type="button" data-when="" aria-pressed="true">${T('Tout')}</button>`
     + `<button class="chip" type="button" data-when="tonight" aria-pressed="false">${T('Ce soir')}</button>`
     + `<button class="chip" type="button" data-when="week" aria-pressed="false">${T('7 jours')}</button>`
-    + `<button class="chip" type="button" data-avail aria-pressed="false">${T('Places dispo')}</button>`
     + `<span class="vr" aria-hidden="true"></span>`
     + genres.map(g => `<button class="chip g" type="button" data-g="${g}" style="--g:${GENRES[g].c}" aria-pressed="false"><i aria-hidden="true"></i>${GENRES[g].label}</button>`).join('')
-    + `<span class="vr" aria-hidden="true"></span>`
-    + months.map(m => `<button class="chip" type="button" data-when="${m}" aria-pressed="false">${fmt.monLong(m + '-01')}</button>`).join('');
+;
   // bandeau Jams du Duc
   const jb = $('[data-jams]'), jams = upcoming().filter(o => o.e.jam).slice(0, 4);
   if (jb && jams.length) jb.innerHTML = `<div class="wrap"><b class="jt">${T('Jams du Duc')}</b><span class="ji">${T('Ven. & sam. · 23:30 · entrée libre, sans réservation')}</span>
@@ -227,7 +224,7 @@ function agenda() {
     $('[data-none]', list).hidden = !!shown;
     $$('[data-when]', $('[data-tags]')).forEach(c => c.setAttribute('aria-pressed', c.dataset.when === f.when));
     $$('[data-g]', $('[data-tags]')).forEach(c => c.setAttribute('aria-pressed', c.dataset.g === f.g));
-    $('[data-avail]', $('[data-tags]')).setAttribute('aria-pressed', f.avail);
+    $('[data-avail]', $('[data-tags]'))?.setAttribute('aria-pressed', f.avail);
   };
   $('[data-tags]').addEventListener('click', ev => {
     const c = ev.target.closest('.chip'); if (!c) return;

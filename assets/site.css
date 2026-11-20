@@ -722,3 +722,75 @@ main { --g: var(--blue); }
 .menu-grid > .mn + .mn { margin-top: 0; }
 .menu-grid > div > * + .mn { margin-top: clamp(24px, 3vw, 40px); }
 .inv em, .bar-hero em { font-style: normal; text-decoration: none; color: var(--ink); }
+
+/* =====================================================================
+   v4.4 — Agenda allégé : plus d'air, moins d'éléments
+   ===================================================================== */
+/* header : 5 entrées, outils en icônes */
+.nav { gap: clamp(18px, 2.4vw, 40px); }
+.hdr-tools { gap: 10px; margin-left: clamp(18px, 2.4vw, 40px); }
+.hdr-cart { width: 40px; padding: 0; justify-content: center; }
+.hdr .bot-fab .fab-l { display: none; }
+.hdr .bot-fab { width: 40px; padding: 0; justify-content: center; margin-left: 0; }
+
+/* tête d'agenda : titre + recherche discrète, filtres sur une ligne */
+.ag-head { position: static; border-bottom: 0; background: transparent; backdrop-filter: none; }
+.ag-head > .wrap { padding-top: clamp(28px, 4vw, 56px); align-items: center; }
+.ag-head h1 { font-size: clamp(2.6rem, 5vw, 4.6rem); line-height: .9; }
+.ag-head h1 span { font-size: .95rem; letter-spacing: .04em; color: var(--ink-2); }
+.search { border: 0; border-bottom: 1.5px solid var(--ink); width: min(260px, 36vw); padding: 0 4px; }
+.vt { border: 0; } .vt button { border: 0 !important; opacity: .45; } .vt button[aria-pressed="true"] { background: none; color: var(--ink); opacity: 1; }
+.filters .wrap { padding-top: clamp(18px, 2.4vw, 28px); padding-bottom: clamp(18px, 2.4vw, 28px); gap: 8px; }
+.chip { border-color: color-mix(in srgb, var(--ink) 35%, transparent); }
+.filters { border-bottom: 1px solid color-mix(in srgb, var(--rule) 20%, transparent); }
+
+/* grille : 4 colonnes max, grands interstices */
+.ag { padding-top: clamp(28px, 3.5vw, 48px); padding-bottom: clamp(56px, 7vw, 110px); }
+.grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr)); gap: clamp(48px, 5vw, 80px) clamp(24px, 2.6vw, 44px); }
+@media (min-width: 1500px) { .grid { grid-template-columns: repeat(4, 1fr); } }
+.grid > .cc .cc-date { padding-top: 18px; }
+.grid > .cc h3 { padding-top: 8px; }
+.grid > .cc .sets { padding-top: 16px; }
+.cc h3 { font-size: clamp(1.3rem, 1.6vw, 1.55rem); }
+.cc-sub { color: var(--ink-2); }
+@media (min-width: 701px) { .cc-sub .gl { display: inline; color: var(--g); font-weight: 700; } .cc-sub .gl + .s::before, .cc-sub .gl + .cc-p::before { content: "·"; margin-right: 8px; color: var(--ink-2); font-weight: 400; } }
+.set { min-height: 50px; }
+
+/* jams : sous l'agenda, en respiration */
+.jams { margin-top: 0; }
+.jams .wrap { padding-top: clamp(28px, 3.5vw, 48px); padding-bottom: clamp(28px, 3.5vw, 48px); align-items: baseline; }
+.jams .jt { font-size: clamp(1.6rem, 2.6vw, 2.4rem); }
+
+@media (max-width: 700px) {
+  .ag-head > .wrap { padding-top: 22px; }
+  .ag-head h1 { font-size: 2.4rem; }
+  .ag-head h1 span { font-size: .78rem; }
+  .search { width: 40px; border: 1.5px solid var(--ink); }
+  .filters .wrap { padding-top: 14px; padding-bottom: 14px; }
+  .ag { padding-top: 6px; }
+  .grid { gap: 0; }
+  .cc { padding: 20px 0; gap: 0 16px; grid-template-columns: 84px 1fr; }
+  .grid > .mh { padding-top: 22px; }
+  .cc-body { gap: 5px; }
+  .jams .wrap { flex-wrap: wrap; overflow: visible; white-space: normal; padding-top: 28px; padding-bottom: 28px; gap: 8px 14px; }
+  .jams .jt { font-size: 1.5rem; flex-basis: 100%; }
+  .jams .ji { display: block; flex-basis: 100%; }
+  .jams .jn { flex-wrap: wrap; white-space: normal; }
+}
+/* espacement vertical porté par la carte (la gouttière de grille s'insérait entre date et nom) */
+@media (min-width: 701px) {
+  .grid { row-gap: 0; }
+  .grid > .cc { padding-bottom: clamp(48px, 5vw, 80px); }
+  .grid > .cc .cc-sub { padding-top: 8px; }
+}
+.ag-head h1 span::before { content: none !important; }
+@media (max-width: 700px) {
+  .ag-head h1 span { font-size: .78rem !important; }
+  .cc .sets { padding-top: 10px; margin-top: 0; }
+  .cc-body { justify-content: flex-start; }
+}
+@media (max-width: 700px) {
+  .grid > .cc .cc-date, .grid > .cc h3, .grid > .cc .sets, .grid > .cc .cc-sub { padding-top: 0; }
+  .cc .sets { margin-top: 8px !important; }
+  .cc { align-items: start; }
+}
