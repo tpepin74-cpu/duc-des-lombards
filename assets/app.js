@@ -791,6 +791,7 @@ try { await syncSoTicket(EVENTS); } catch (err) { console.warn('SoTicket indispo
 header();
 const page = document.body.dataset.page;
 ({ agenda, concert })[page]?.();
+$$('[data-toc]').forEach(d => { if (innerWidth > 900) d.open = true; });
 upnext(); week(); newsletter(); if (!EN) bot(); quote();
 { const n = nextBookable(); $$('[data-next]').forEach(b => { if (n) { b.dataset.book = n.e.id; b.dataset.d = n.d; b.dataset.t = n.set.t; } }); }
 motion();
