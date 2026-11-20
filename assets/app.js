@@ -65,7 +65,20 @@ const AR = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-wi
 const media = (e, sizes = '(max-width: 700px) 100vw, 25vw', eager = false) => `<span class="duo" style="${gvars(e)}">${e.img
   ? `<img src="${img(e.img, 480)}" srcset="${srcset(e.img)}" sizes="${sizes}" alt="${esc(name(e))}" style="object-position:${FOCUS[e.img] || '50% 30%'}" ${eager ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async" width="480" height="360">`
   : `<span class="duo-ph" aria-hidden="true">${esc(name(e))}</span>`}</span>`;
-const badge = (e, cls = '') => `<span class="badge ${cls}" aria-label="Style : ${esc(gc(e).label)}"><i>${esc(gc(e).label)}</i></span>`;
+/* Pastille de style : médaillon or, texte circulaire qui tourne lentement, reflet qui passe (SVG + CSS, plus léger qu'un Lottie) */
+const GOLD_DEFS = `<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+  <linearGradient id="duc-gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f3e3a6"/><stop offset=".28" stop-color="#c9a24c"/><stop offset=".55" stop-color="#8a6624"/><stop offset=".8" stop-color="#d8b866"/><stop offset="1" stop-color="#7a5a1e"/></linearGradient>
+  <path id="duc-ring" d="M50,50 m-36,0 a36,36 0 1,1 72,0 a36,36 0 1,1 -72,0"/></defs></svg>`;
+document.body.insertAdjacentHTML('afterbegin', GOLD_DEFS);
+const badge = (e, cls = '') => {
+  const l = gc(e).label.toUpperCase();
+  let ring = ''; while (ring.length < 42) ring += `${l} ✦ `;
+  return `<span class="badge ${cls}" role="img" aria-label="Style : ${esc(gc(e).label)}"><svg viewBox="0 0 100 100" aria-hidden="true">
+    <circle cx="50" cy="50" r="49" fill="url(#duc-gold)"/><circle cx="50" cy="50" r="45.5" fill="none" stroke="#1a1408" stroke-opacity=".35" stroke-width=".6"/>
+    <g class="ring"><text><textPath href="#duc-ring" textLength="224" lengthAdjust="spacing">${esc(ring.trim())}</textPath></text></g>
+    <circle cx="50" cy="50" r="24" fill="none" stroke="#1a1408" stroke-opacity=".35" stroke-width=".6"/>
+    <text class="mid" x="50" y="51" text-anchor="middle" dominant-baseline="central" font-size="${Math.min(13, 70 / l.split(' ')[0].length).toFixed(1)}">${esc(l.split(' ')[0])}</text></svg></span>`;
+};
 
 const chip = (e, d, s) => {
   const st = setState(d, s);
@@ -237,7 +250,7 @@ function concert() {
     ${e.sub ? `<p class="ch-sub">${esc(e.jam ? `avec ${e.sub}` : e.sub)}</p>` : ''}
     ${lu}
     <div class="ch-book">
-      ${shown.map(o => `<div class="ch-occ"><span class="ch-occ-d">${shown.length > 1 ? `${fmt.wd(o.d)} <b>${fmt.day(o.d)}</b>` : 'Réserver'}</span>${e.jam ? `<p class="cc-jam">23:30 · entrée libre · sans réservation</p>` : chips(o)}</div>`).join('')}
+      ${shown.map(o => `<div class="ch-occ"><span class="ch-occ-d">${fmt.wd(o.d)} <b>${fmt.day(o.d)}</b></span>${e.jam ? `<p class="cc-jam">23:30 · entrée libre · sans réservation</p>` : chips(o)}</div>`).join('')}
       ${prices}
       <p class="fine">Placement libre assis · portes 30 min avant le set · 75 min</p>
     </div>
@@ -660,7 +673,7 @@ function splitText(el) {
         if (!p) return;
         if (/^\s+$/.test(p)) { frag.append(document.createTextNode(' ')); return; }
         const word = document.createElement('span'); word.style.display = 'inline-block'; word.style.whiteSpace = 'nowrap';
-        [...p].forEach(u => { const w = document.createElement('span'); w.className = 'lt'; const i = document.createElement('i'); i.textContent = u; w.append(i); word.append(w); });
+        [...(Intl.Segmenter ? [...new Intl.Segmenter('fr', { granularity: 'grapheme' }).segment(p.normalize('NFC'))].map(x => x.segment) : [...p.normalize('NFC')])].forEach(u => { const w = document.createElement('span'); w.className = 'lt'; const i = document.createElement('i'); i.textContent = u; w.append(i); word.append(w); });
         frag.append(word);
       });
       n.replaceWith(frag);
@@ -676,7 +689,7 @@ function heroIn() {
   M.animate(splitText(n), { transform: ['translateY(105%)', 'translateY(0%)'] }, { duration: .8, delay: M.stagger(.025, { startDelay: .1 }), ease: IO });
   M.animate($('.duo', h), { clipPath: ['inset(0 0 100% 0)', 'inset(0 0 0% 0)'] }, { duration: .9, ease: IO });
   M.animate($$('.ch-when, .ch-sub, .lu, .ch-book, .ch-sign', h), { opacity: [0, 1], transform: ['translateY(12px)', 'translateY(0px)'] }, { duration: .6, delay: M.stagger(.06, { startDelay: .3 }), ease: EO });
-  const b = $('.badge', h); if (b) M.animate(b, { transform: ['scale(0) rotate(-40deg)', 'scale(1) rotate(-14deg)'] }, { type: 'spring', stiffness: 220, damping: 14, delay: .6 });
+  const b = $('.badge', h); if (b) M.animate(b, { transform: ['scale(0) rotate(-90deg)', 'scale(1) rotate(0deg)'] }, { type: 'spring', stiffness: 220, damping: 14, delay: .6 });
 }
 async function motion() {
   if (reduce) return;
