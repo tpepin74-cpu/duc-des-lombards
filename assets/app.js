@@ -1,8 +1,9 @@
 import { syncSoTicket } from './soticket.js';
 import { addToCart, warmCart, sameSite, bridgeUrl, BRIDGE_INSTALLED } from './cart.js';
-import { EVENTS, INFO, ROOM, BILLETTERIE, CONTENT, NOCUT, img, srcset } from './data.js';
-const cut = n => n && !NOCUT.includes(n) ? `assets/img/cut/${n}.webp` : null;
+import { EVENTS, INFO, BILLETTERIE, CONTENT, GENRES, img, srcset } from './data.js';
+/* Le Duc des Lombards — v4 « affiche papier » : l'agenda d'abord, 1 clic pour découvrir, 1 clic pour réserver. */
 
+/* ============ Utils ============ */
 /* ============ Utils ============ */
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -48,59 +49,63 @@ const nextBookable = (pred = () => true) => {
   }
   return null;
 };
-const posterVariant = e => ['', 'v2', 'v3'][[...e.id].reduce((a, c) => a + c.charCodeAt(0), 0) % 3];
-const posterPos = e => { const h = [...e.id].reduce((a, c) => (a * 31 + c.charCodeAt(0)) % 997, 7); return `--px:${20 + h % 60}%;--py:${15 + (h >> 2) % 55}%`; };
-
-/* ============ Fragments ============ */
-const media = (e, sizes = '(max-width: 700px) 100vw, 33vw', eager = false) => e.img
-  ? `<img src="${img(e.img, 480)}" srcset="${srcset(e.img)}" sizes="${sizes}" alt="${esc(e.title)}" ${eager ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async" width="480" height="360">`
-  : `<div class="poster ${posterVariant(e)}" style="${posterPos(e)}" aria-hidden="true"><strong>${esc(e.jam ? 'Jam du Duc' : e.title)}</strong></div>`;
-
-const chip = (e, d, s) => {
-  const st = setState(d, s);
-  const label = e.jam ? 'Entrée libre' : STATUS[st];
-  const attrs = bookable(st)
-    ? `data-book="${e.id}" data-d="${d}" data-t="${s.t}" aria-label="Réserver ${esc(e.title)}, ${fmt.full(d)} à ${fmt.time(s.t)}"`
-    : st === 'full' ? `data-wait="${e.id}" data-d="${d}" data-t="${s.t}" aria-label="${esc(e.title)} ${fmt.time(s.t)} complet — liste d'attente"`
-    : `aria-disabled="true"`;
-  return `<button type="button" class="set is-${st}" ${attrs}><b>${fmt.time(s.t)}</b><small>${label}</small></button>`;
-};
-const chips = o => `<div class="sets">${o.sets.map(s => chip(o.e, o.d, s)).join('')}</div>`;
-const tagHtml = e => `<span class="tag ${e.jam ? 'is-jam' : e.tag === 'Événement' || e.tag === 'All star' ? 'is-duc' : ''}">${esc(e.tag)}</span>`;
+/* ============ Charte « affiche papier » : une famille musicale = une couleur ============ */
+const gc = e => GENRES[e.genre] || GENRES.classic;
+const gvars = e => `--g:${gc(e).c};--gl:${gc(e).l}`;
+const name = e => e.jam ? 'Jam du Duc' : e.title;
+const ddmm = d => `${String(fmt.day(d)).padStart(2, '0')}.${d.slice(5, 7)}`;
 const link = e => `concert.html#${e.id}`;
 // Tarifs relevés sur la billetterie : plein / réduit (Paris Jazz Club) / jeune
 const pjcP = e => e.pjc ?? e.price - 3;
 const lowP = e => e.jeune ?? pjcP(e);
 const BT_RATE = { plein: 'Tarif PLEIN', pjc: 'Tarif RÉDUIT', jeune: 'Tarif JEUNE' };
+const AR = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M3 10h14M12 5l5 5-5 5"/></svg>';
 
-const card = o => `
-<article class="ev" data-reveal>
-  <a class="ev-media" href="${link(o.e)}" tabindex="-1" aria-hidden="true">${media(o.e)}${tagHtml(o.e)}
-    <span class="ev-date"><b class="num">${fmt.day(o.d)}</b><span>${fmt.wd(o.d)} ${fmt.mon(o.d)}</span></span></a>
-  <div class="ev-body">
-    <h3><a href="${link(o.e)}">${esc(o.e.jam ? `Jam du Duc · ${o.e.sub}` : o.e.title)}</a></h3>
-    <p class="meta">${o.e.price ? `dès ${lowP(o.e)} €` : 'Entrée libre'}</p>
-  </div>
-  ${chips(o)}
-</article>`;
+/* Photo en bichromie (couleur de la famille + papier) : aucun détourage, juste la photo d'origine */
+const media = (e, sizes = '(max-width: 700px) 100vw, 25vw', eager = false) => `<span class="duo" style="${gvars(e)}">${e.img
+  ? `<img src="${img(e.img, 480)}" srcset="${srcset(e.img)}" sizes="${sizes}" alt="${esc(name(e))}" ${eager ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async" width="480" height="360">`
+  : `<span class="duo-ph" aria-hidden="true">${esc(name(e))}</span>`}</span>`;
+const badge = (e, cls = '') => `<span class="badge ${cls}" aria-label="Style : ${esc(gc(e).label)}"><i>${esc(gc(e).label)}</i></span>`;
 
-const RT_BG = ['var(--sapphire)', 'var(--cyan)', 'var(--jade)'];
-const rowThumb = (e, i = 0) => cut(e.img)
-  ? `<a class="rt" href="${link(e)}" tabindex="-1" aria-hidden="true" style="background:${RT_BG[[...e.id].reduce((a, c) => a + c.charCodeAt(0), 0) % 3]}"><img src="${cut(e.img)}" alt="" loading="lazy" decoding="async"></a>`
-  : `<a class="rt" href="${link(e)}" tabindex="-1" aria-hidden="true">${media(e, '140px')}</a>`;
-const row = o => `
-<div class="row" data-cut="${o.e.img || ''}" data-id="${o.e.id}" data-tag="${esc(norm(o.e.tag))}" data-search="${esc(norm(`${o.e.title} ${o.e.sub || ''} ${o.e.tag}`))}" data-month="${o.d.slice(0, 7)}" data-avail="${o.sets.some(s => bookable(setState(o.d, s))) ? 1 : 0}">
-  ${rowThumb(o.e)}
-  <div class="row-date"><b class="num">${String(fmt.day(o.d)).padStart(2, '0')}</b><span>${fmt.wd(o.d)} ${fmt.mon(o.d)}</span></div>
-  <div class="row-main"><h3><a href="${link(o.e)}">${esc(o.e.jam ? `Jam du Duc · ${o.e.sub}` : o.e.title)}</a></h3>
-    <p class="meta">${esc(o.e.tag)}${o.e.price ? ` · ${o.e.price} €` : ' · entrée libre'}${(CONTENT[o.e.id] || {}).yt ? ' <span class="has-vid"><i aria-hidden="true"><svg viewBox="0 0 10 10"><path d="M3 2l5 3-5 3z" fill="currentColor"/></svg></i>Vidéo</span>' : ''}</p></div>
-  ${chips(o)}
-</div>`;
+const chip = (e, d, s) => {
+  const st = setState(d, s);
+  const label = e.jam ? 'Entrée libre' : st === 'full' ? 'Complet' : st === 'last' ? 'Dernières places' : STATUS[st];
+  const attrs = bookable(st)
+    ? `data-book="${e.id}" data-d="${d}" data-t="${s.t}" aria-label="Réserver ${esc(name(e))}, ${fmt.full(d)} à ${fmt.time(s.t)}"`
+    : st === 'full' ? `data-wait="${e.id}" data-d="${d}" data-t="${s.t}" aria-label="${esc(name(e))} ${fmt.time(s.t)} complet, liste d’attente"`
+    : `aria-disabled="true"`;
+  return `<button type="button" class="set is-${st}" ${attrs}><b>${fmt.time(s.t)}</b><small>${label}</small></button>`;
+};
+const chips = o => `<div class="sets">${o.sets.map(s => chip(o.e, o.d, s)).join('')}</div>`;
+
+/* Les jams se greffent sur le concert du même soir : « puis Jam du Duc dès 23:30 » */
+const jamOf = d => OCC.find(o => o.e.jam && o.d === d);
+const dateLine = d => `<span class="dl"><b>${fmt.wdLong(d)} ${fmt.day(d)}</b> ${fmt.monLong(d)}</span>`;
+const when = d => d === todayISO() ? 'Ce soir' : d === addDays(todayISO(), 1) ? 'Demain' : '';
+
+/* Carte concert (grille sur ordinateur, ligne compacte sur mobile) :
+   toute la carte ouvre la fiche artiste, les horaires réservent en 1 clic. */
+const card = (o, { eager = false } = {}) => {
+  const e = o.e, j = !e.jam && jamOf(o.d), w = when(o.d);
+  const ds = o.ds || [o.d], multi = ds.length > 1;
+  const range = multi ? `<span class="dl">Du <b>${fmt.day(ds[0])}</b> au <b>${fmt.day(ds.at(-1))} ${fmt.monLong(ds.at(-1))}</b></span>` : dateLine(o.d);
+  return `<article class="cc${e.jam ? ' is-jam' : ''}" style="${gvars(e)}" data-g="${e.genre}" data-month="${o.d.slice(0, 7)}" data-d="${ds.join(' ')}"
+    data-search="${esc(norm(`${e.title} ${e.sub || ''} ${e.tag} ${gc(e).label}`))}" data-avail="${(o.occs || [o]).some(x => x.sets.some(s => bookable(setState(x.d, s)))) ? 1 : 0}">
+    <div class="cc-media">${media(e, '(max-width: 700px) 96px, (max-width: 1300px) 25vw, 20vw', eager)}${e.jam ? '' : badge(e)}${w ? `<span class="when">${w}</span>` : ''}</div>
+    <div class="cc-body">
+      <p class="cc-date">${range}${multi ? `<span class="nd">${ds.length} soirs</span>` : ''}</p>
+      <h3><a class="cc-link" href="${link(e)}">${esc(name(e))}</a></h3>
+      <p class="cc-sub">${esc(e.jam ? `avec ${e.sub}` : e.sub || e.tag)}${e.jam ? '' : `<span class="cc-p"> · dès ${lowP(e)} €</span>`}</p>
+      ${e.jam ? `<p class="cc-jam">23:30 · entrée libre · sans réservation</p>` : chips(o)}
+      ${j ? `<p class="cc-jam">Puis <b>Jam du Duc</b> · 23:30 · ${esc(j.e.sub)}</p>` : ''}
+    </div>
+  </article>`;
+};
 
 /* ============ Header / menu ============ */
 function header() {
   const h = $('.hdr'); if (!h) return;
-  const onScroll = () => h.classList.toggle('is-solid', scrollY > 24);
+  const onScroll = () => h.classList.toggle('is-solid', scrollY > 8);
   onScroll(); addEventListener('scroll', onScroll, { passive: true });
   const b = $('.burger'), m = $('.menu');
   b?.addEventListener('click', () => {
@@ -125,24 +130,140 @@ const lottieLib = () => lottieP ||= new Promise((res, rej) => {
   s.src = 'https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie_light.min.js';
   s.async = true; s.onload = () => res(window.lottie); s.onerror = rej; document.head.append(s);
 });
-async function playLottie(el, name, { loop = true } = {}) {
+async function playLottie(el, nm, { loop = true } = {}) {
   try {
     const lottie = await lottieLib();
     el.innerHTML = '';
-    const a = lottie.loadAnimation({ container: el, renderer: 'svg', loop, autoplay: !reduce, path: `assets/lottie/${name}.json` });
+    const a = lottie.loadAnimation({ container: el, renderer: 'svg', loop, autoplay: !reduce, path: `assets/lottie/${nm}.json` });
     if (reduce) a.addEventListener('DOMLoaded', () => a.goToAndStop(a.totalFrames - 1, true));
     return a;
   } catch { return null; }
 }
-function lazyLotties() {
-  const els = $$('[data-lottie]'); if (!els.length) return;
-  const io = new IntersectionObserver(es => es.forEach(en => {
-    if (!en.isIntersecting) return; io.unobserve(en.target);
-    playLottie(en.target, en.target.dataset.lottie);
-  }), { rootMargin: '100px' });
-  els.forEach(e => io.observe(e));
+
+/* ============ AGENDA (page d'accueil) ============ */
+function agenda() {
+  const list = $('[data-agenda]'); if (!list) return;
+  const raw = upcoming().filter(o => !o.e.jam || !OCC.some(x => !x.e.jam && x.d === o.d));
+  // un concert sur plusieurs soirs = une seule carte (dates au choix dans le panneau de réservation)
+  const occ = [];
+  raw.forEach(o => {
+    const g = !o.e.jam && occ.find(x => x.e.id === o.e.id && x.d.slice(0, 7) === o.d.slice(0, 7));
+    if (g) { g.ds.push(o.d); g.occs.push(o); return; }
+    occ.push({ ...o, ds: [o.d], occs: [o] });
+  });
+  // horaires affichés : la première soirée encore réservable
+  occ.forEach(g => { const f = g.occs.find(x => x.sets.some(s => bookable(setState(x.d, s)))); if (f) Object.assign(g, { d: f.d, sets: f.sets }); });
+  const months = [...new Set(occ.map(o => o.d.slice(0, 7)))];
+  let first = true;
+  // une seule grille continue (pas de trou en fin de mois) ; les intitulés de mois n'apparaissent qu'en vue liste
+  list.innerHTML = `<div class="grid">${months.map(m => {
+    const its = occ.filter(o => o.d.slice(0, 7) === m);
+    return `<h2 class="mh" data-mon="${m}"><span>${fmt.monLong(m + '-01')} ${m.slice(0, 4)}</span><small>${its.filter(o => !o.e.jam).length} concerts</small></h2>`
+      + its.map(o => { const c = card(o, { eager: first }); first = false; return c; }).join('');
+  }).join('')}</div><p class="empty" data-none hidden>Aucun concert ne correspond. <button class="btn" type="button" data-reset>Tout afficher</button></p>`;
+
+  // Filtres : quand, style, places, recherche
+  const week = [...Array(7)].map((_, i) => addDays(todayISO(), i));
+  const used = new Set(upcoming().filter(o => !o.e.jam).map(o => o.e.genre));
+  const genres = Object.keys(GENRES).filter(g => used.has(g));
+  $('[data-tags]').innerHTML =
+      `<button class="chip" type="button" data-when="" aria-pressed="true">Tout</button>`
+    + `<button class="chip" type="button" data-when="tonight" aria-pressed="false">Ce soir</button>`
+    + `<button class="chip" type="button" data-when="week" aria-pressed="false">7 jours</button>`
+    + months.map(m => `<button class="chip" type="button" data-when="${m}" aria-pressed="false">${fmt.monLong(m + '-01')}</button>`).join('')
+    + `<span class="vr" aria-hidden="true"></span>`
+    + genres.map(g => `<button class="chip g" type="button" data-g="${g}" style="--g:${GENRES[g].c}" aria-pressed="false"><i aria-hidden="true"></i>${GENRES[g].label}</button>`).join('')
+    + `<span class="vr" aria-hidden="true"></span><button class="chip" type="button" data-avail aria-pressed="false">Places dispo</button>`;
+  const f = { when: '', g: '', avail: false, q: '' };
+  const q = $('[data-q]');
+  const apply = () => {
+    let shown = 0;
+    $$('.cc', list).forEach(c => {
+      const d = c.dataset.d;
+      const dd = d.split(' ');
+      const okW = !f.when || (f.when === 'tonight' ? dd.includes(todayISO()) : f.when === 'week' ? dd.some(x => week.includes(x)) : c.dataset.month === f.when);
+      const ok = okW && (!f.g || c.dataset.g === f.g) && (!f.avail || c.dataset.avail === '1') && (!f.q || c.dataset.search.includes(norm(f.q)));
+      c.hidden = !ok; shown += ok;
+    });
+    $$('.mh[data-mon]', list).forEach(h => h.hidden = !$$(`.cc[data-month="${h.dataset.mon}"]:not([hidden])`, list).length);
+    $('[data-none]', list).hidden = !!shown;
+    $$('[data-when]', $('[data-tags]')).forEach(c => c.setAttribute('aria-pressed', c.dataset.when === f.when));
+    $$('[data-g]', $('[data-tags]')).forEach(c => c.setAttribute('aria-pressed', c.dataset.g === f.g));
+    $('[data-avail]', $('[data-tags]')).setAttribute('aria-pressed', f.avail);
+  };
+  $('[data-tags]').addEventListener('click', ev => {
+    const c = ev.target.closest('.chip'); if (!c) return;
+    if (c.hasAttribute('data-avail')) f.avail = !f.avail;
+    else if (c.dataset.g) f.g = f.g === c.dataset.g ? '' : c.dataset.g;
+    else if ('when' in c.dataset) { f.when = c.dataset.when; if (!f.when) { f.g = ''; f.avail = false; } }
+    apply();
+  });
+  q?.addEventListener('input', () => { f.q = q.value; apply(); });
+  list.addEventListener('click', ev => { if (ev.target.closest('[data-reset]')) { Object.assign(f, { when: '', g: '', avail: false, q: '' }); if (q) q.value = ''; apply(); } });
+  // Vue affiches / liste (ordinateur), mémorisée
+  const vt = $('[data-view]');
+  const setView = v => { list.dataset.v = v; $$('button', vt).forEach(b => b.setAttribute('aria-pressed', b.dataset.v === v)); store.set('view', v); };
+  vt?.addEventListener('click', ev => { const b = ev.target.closest('button'); if (b) setView(b.dataset.v); });
+  setView(store.get('view', 'grid'));
+  apply();
 }
 
+/* ============ FICHE CONCERT ============ */
+function concert() {
+  const root = $('[data-concert]'); if (!root) return;
+  if (!root.dataset.bound) { root.dataset.bound = 1; addEventListener('hashchange', () => { concert(); scrollTo(0, 0); heroIn(); }); }
+  const e = byId(location.hash.slice(1)) || nextBookable()?.e || EVENTS[0];
+  document.title = `${name(e)}${e.jam ? ` · ${e.sub}` : ''} — Le Duc des Lombards, club de jazz à Paris`;
+  const occ = e.dates.map(x => ({ e, d: x.d, sets: x.sets }));
+  const live = occ.filter(o => o.sets.some(s => !isPast(o.d, s.t)));
+  const shown = (live.length ? live : occ).slice(0, 4);
+  const C = CONTENT[e.id] || {};
+  const paras = (C.desc || '').split('\n').filter(Boolean);
+  const others = upcoming().filter(o => o.e.id !== e.id && !o.e.jam).filter((o, i, a) => a.findIndex(x => x.e.id === o.e.id) === i).slice(0, 4);
+  const lu = C.lu?.length ? `<ul class="lu">${C.lu.map(([n, i]) => `<li><b>${esc(n)}</b> <span>${esc(i)}</span></li>`).join('')}</ul>` : '';
+  const prices = e.price ? `<p class="ch-price"><span>Plein <b>${e.price} €</b></span><span>Réduit <b>${pjcP(e)} €</b></span>${e.jeune ? `<span>Jeune <b>${e.jeune} €</b></span>` : ''}</p>`
+    : `<p class="ch-price"><span><b>Entrée libre</b> · consommation obligatoire</span></p>`;
+  const live2 = !/claudeusercontent\.com$/.test(location.hostname);
+  const video = C.yt ? (live2
+      ? `<div class="vp is-playing"><iframe src="https://www.youtube-nocookie.com/embed/${C.yt}?rel=0&modestbranding=1" title="Vidéo — ${esc(name(e))}" loading="lazy" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>`
+      : `<div class="vp" data-yt="${C.yt}"><img src="assets/img/yt/${C.yt}.webp" alt="" loading="lazy" decoding="async"><button class="vp-play" type="button" aria-label="Lire la vidéo de ${esc(name(e))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4l13 8-13 8z" fill="currentColor"/></svg><span>Lire la vidéo</span></button></div>`) : '';
+  root.innerHTML = `
+  <section class="chero" style="${gvars(e)}" aria-labelledby="ch-title">
+    <div class="ch-media">${media(e, '(max-width: 900px) 100vw, 50vw', true)}${e.jam ? '' : badge(e, 'big')}</div>
+    <div class="ch-txt">
+      <p class="ch-date">${dateLine(shown[0].d)}${e.dates.length > 1 ? `<span class="more">+ ${e.dates.length - 1} date${e.dates.length > 2 ? 's' : ''}</span>` : ''}</p>
+      <h1 id="ch-title" class="ch-name">${esc(name(e))}</h1>
+      ${e.sub ? `<p class="ch-sub">${esc(e.jam ? `avec ${e.sub}` : e.sub)}</p>` : ''}
+      ${lu}
+      <div class="ch-book">
+        ${shown.map(o => `<div class="ch-occ"><span class="ch-occ-d">${shown.length > 1 ? `${fmt.wd(o.d)} ${ddmm(o.d)}` : ''}</span>${e.jam ? `<p class="cc-jam">23:30 · entrée libre · sans réservation</p>` : chips(o)}</div>`).join('')}
+        ${prices}
+        <p class="fine">Placement libre assis · portes 30 min avant · set de 75 min</p>
+      </div>
+    </div>
+  </section>
+  ${paras.length || video ? `<section class="sec ch-about" style="${gvars(e)}"><div class="wrap ${paras.length && video ? 'two' : 'one'}">
+    ${paras.length ? `<div><h2 class="sh">Le concert</h2><p class="lede">${esc(paras[0])}</p>${paras.slice(1).map(x => `<p>${esc(x)}</p>`).join('')}</div>` : ''}
+    ${video ? `<div><h2 class="sh">En vidéo</h2>${video}</div>` : ''}</div></section>` : ''}
+  ${e.affiche ? `<section class="sec aff" style="${gvars(e)}"><div class="wrap"><h2 class="sh">L’affiche</h2>
+    <picture><source media="(max-width: 700px)" srcset="assets/img/affiches/${e.affiche}-916.webp"><img src="assets/img/affiches/${e.affiche}-169.webp" alt="Affiche officielle : ${esc(name(e))} au Duc des Lombards" loading="lazy" decoding="async" width="1600" height="900"></picture></div></section>` : ''}
+  <section class="sec strip"><div class="wrap"><div><span class="k">Accès</span><p>42, rue des Lombards · Métro Châtelet, sortie 10</p></div><div><span class="k">Au bar</span><p><a href="bar.html">Cocktails, vins & planches</a></p></div><div><span class="k">Une question</span><p><a href="tel:+33142332288">01 42 33 22 88</a></p></div></div></section>
+  ${others.length ? `<section class="sec"><div class="wrap"><div class="sec-head"><h2 class="sh">À suivre au Duc</h2><a class="lnk" href="index.html">Tout l’agenda ${AR}</a></div>
+    <div class="grid">${others.map(o => card(o)).join('')}</div></div></section>` : ''}`;
+  const ld = document.createElement('script'); ld.type = 'application/ld+json';
+  ld.textContent = JSON.stringify(e.dates.map(x => ({ '@context': 'https://schema.org', '@type': 'MusicEvent', name: title(e), startDate: `${x.d}T${x.sets[0].t}:00+01:00`,
+    location: { '@type': 'MusicVenue', name: 'Le Duc des Lombards', address: INFO.address }, offers: e.price ? { '@type': 'Offer', price: e.price, priceCurrency: 'EUR', url: e.bt || BILLETTERIE } : undefined })));
+  document.head.append(ld);
+}
+
+/* « À l'affiche » sur les pages intérieures */
+function upnext() {
+  const r = $('[data-upnext]'); if (!r) return;
+  const seen = new Set();
+  r.innerHTML = upcoming().filter(o => !o.e.jam && !seen.has(o.e.id) && seen.add(o.e.id)).slice(0, 4).map(o => card(o)).join('');
+}
+
+/* ============ Booking sheet (1 clic) ============ */
 /* ============ Booking sheet (1 clic) ============ */
 const ICON_X = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3l10 10M13 3L3 13"/></svg>';
 const sheet = {
@@ -361,157 +482,6 @@ document.addEventListener('click', ev => {
   const w = ev.target.closest('[data-wait]');
   if (w) { ev.preventDefault(); waitlist(w.dataset.wait, w.dataset.d, w.dataset.t); }
 });
-
-/* ============ Mobile dock "ce soir" ============ */
-function dock() {
-  const n = nextBookable(); if (!n) return;
-  const d = document.createElement('div'); d.className = 'dock';
-  d.innerHTML = `<div class="d-txt"><b>${esc(n.e.title)}</b><span>${relDay(n.d)} · ${fmt.time(n.set.t)}</span></div>
-    <button class="btn" type="button" data-book="${n.e.id}" data-d="${n.d}" data-t="${n.set.t}">Réserver</button>`;
-  document.body.append(d);
-  const hero = $('.poster-hero, .hero, .phero');
-  const io = new IntersectionObserver(([en]) => d.classList.toggle('is-on', !en.isIntersecting));
-  hero ? io.observe(hero) : d.classList.add('is-on');
-}
-
-/* ============ Pages ============ */
-/* Affiche : nom coupé en deux lignes, détouré pris en sandwich entre les deux. */
-function splitName(t) {
-  const w = t.split(' ');
-  if (w.length === 1) return [t, ''];
-  let best = 1, diff = 1e9;
-  for (let i = 1; i < w.length; i++) { const d = Math.abs(w.slice(0, i).join(' ').length - w.slice(i).join(' ').length); if (d < diff) { diff = d; best = i; } }
-  return [w.slice(0, best).join(' '), w.slice(best).join(' ')];
-}
-const ddmm = d => `${String(fmt.day(d)).padStart(2, '0')}.${d.slice(5, 7)}`;
-function posterHero(o, label, intro = false) {
-  const e = o.e, name = e.jam ? 'Jam du Duc' : e.title;
-  const [l1, l2] = splitName(name.replace(' & ', ' & '));
-  const fs = Math.max(...[l1, l2].map(x => x.length));
-  const size = `font-size:min(${(118 / Math.max(fs, 5)).toFixed(1)}vw, 15rem, 24svh)`;
-  return `<section class="poster-hero" data-hero aria-labelledby="ph-title">
-    ${intro ? `<p class="ph-id"><span class="ph-id-a">Club de jazz</span><span class="ph-id-b">Paris · Châtelet</span><span class="ph-id-c">2 concerts par soir · depuis les années 80</span></p>` : ''}
-    <div class="ph-meta"><span class="lab"><span class="eq" data-lottie="equalizer" aria-hidden="true"></span>${esc(label)}</span>
-      <span class="ph-date num" data-flap>${ddmm(o.d)}</span><span class="ph-tag">${esc(e.tag)}</span></div>
-    <div class="stage">
-      <h1 id="ph-title" class="sr">${esc(title(e))}</h1>
-      <div class="nm l1" aria-hidden="true" style="${size}">${esc(l1)}</div>
-      ${cut(e.img) ? `<div class="blk" aria-hidden="true" style="left:58%;top:18%;width:22%;height:64%"></div>
-      <div class="cut-wrap"><img class="cut" src="${cut(e.img)}" alt="${esc(e.title)}" fetchpriority="high" decoding="async"></div>`
-        : e.img ? `<div class="blk" aria-hidden="true" style="left:62%;top:10%;width:30%;height:70%"></div>
-      <div class="cut-wrap"><div class="ph-photo"><img class="cut" src="${img(e.img, 960)}" alt="${esc(e.title)}" fetchpriority="high" decoding="async"></div></div>`
-        : `<div class="blk" aria-hidden="true" style="left:var(--pad);top:30%;width:36%;height:38%"></div>`}
-      <div class="nm l2" aria-hidden="true" style="${size}">${esc(l2 || l1)}${e.sub && !e.jam ? `<span class="sub">${esc(e.sub)}</span>` : e.jam ? `<span class="sub">${esc(e.sub)}</span>` : ''}</div>
-      ${intro ? `<a class="ph-link" href="concert.html#${esc(e.id)}" aria-label="Découvrir ${esc(title(e))}"><span class="ph-go">Découvrir l’artiste <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M3 10h14M12 5l5 5-5 5"/></svg></span></a>` : ''}
-    </div>
-    <div class="ph-book">
-      <div class="ph-price">${e.price ? `<b class="num">${lowP(e)}–${e.price} €</b><span>Placement libre · 75 min</span>` : `<b>Libre</b><span>Consommation obligatoire</span>`}</div>
-      ${chips(o)}
-    </div>
-  </section>`;
-}
-function home() {
-  const n = nextBookable(); const root = $('[data-home-hero]');
-  if (n && root) root.outerHTML = posterHero(n, n.d === todayISO() ? 'Ce soir au Duc' : `${relDay(n.d)} au Duc`, true);
-  const tk = $('[data-ticker]');
-  if (tk) {
-    const items = upcoming().filter(o => !o.e.jam).slice(0, 12).map(o => `<a href="${link(o.e)}">${esc(o.e.title)} <span>${ddmm(o.d)}</span></a>`).join('');
-    const id = `<a href="le-duc.html">Club de jazz <span>Paris · Châtelet</span></a>`;
-    tk.innerHTML = id + items + (id + items).replace(/<a /g, '<a aria-hidden="true" tabindex="-1" ');
-  }
-  // collage de détourés
-  const cl = $('[data-collage]');
-  if (cl) {
-    const seen = new Set();
-    const picks = upcoming().filter(o => cut(o.e.img) && !o.e.jam && o.e.id !== n?.e.id && !seen.has(o.e.id) && seen.add(o.e.id)).slice(0, 5);
-    const L = [ { l: 1, t: 8, w: 36, bg: 'var(--jade)', s: .6 }, { l: 33, t: 36, w: 30, bg: '#fff', s: 1.2 }, { l: 60, t: 4, w: 34, bg: '#fff', s: .8 }, { l: 66, t: 50, w: 32, bg: '#000', s: 1.4 }, { l: 4, t: 56, w: 30, bg: '#0f0f0f', s: 1.0 } ];
-    cl.insertAdjacentHTML('beforeend', picks.map((o, i) => { const p = L[i]; const st = o.sets.find(x => bookable(setState(o.d, x)));
-      return `<div class="pc pc${i + 1}" data-speed="${p.s}" style="left:${p.l}%;top:${p.t}%;width:${p.w}%">
-      <a href="${link(o.e)}" style="display:block;position:relative;text-decoration:none;color:inherit">
-        <span class="bg" aria-hidden="true" style="background:${p.bg};left:10%;right:10%;top:16%;bottom:0"></span>
-        <img src="${cut(o.e.img)}" alt="${esc(o.e.title)}" loading="lazy" decoding="async">
-        <span class="lb">${esc(o.e.title)}<small>${fmt.wd(o.d)} ${ddmm(o.d)}</small></span></a>
-      ${st ? `<button class="bk" type="button" data-book="${o.e.id}" data-d="${o.d}" data-t="${st.t}" aria-label="Réserver ${esc(o.e.title)} à ${st.t}">${st.t}<small>Réserver</small></button>` : ''}</div>`; }).join(''));
-  }
-  const rl = $('[data-rows]');
-  if (rl) rl.innerHTML = upcoming().slice(0, 8).map(row).join('');
-  const jn = $('[data-jam-next]'), j = upcoming().find(o => o.e.jam);
-  if (jn && j) jn.textContent = `Prochaine : ${relDay(j.d).toLowerCase()} · ${j.e.sub}`;
-}
-
-function agenda() {
-  const list = $('[data-agenda]'); if (!list) return;
-  const occ = upcoming();
-  const months = [...new Set(occ.map(o => o.d.slice(0, 7)))];
-  list.innerHTML = months.map(m => {
-    const its = occ.filter(o => o.d.startsWith(m));
-    return `<section data-mon="${m}"><h2 class="month-h">${fmt.monLong(m + '-01')} <span class="cnt">${its.filter(o => !o.e.jam).length} concerts</span></h2>${its.map(row).join('')}</section>`;
-  }).join('') + `<p class="empty" data-none hidden>Aucun concert ne correspond. <button class="btn ghost" type="button" data-reset>Tout afficher</button></p>`;
-  const tags = [...new Set(EVENTS.map(e => e.tag))];
-  $('[data-tags]').innerHTML = `<button class="chip" type="button" data-tag="" aria-pressed="true">Tout</button>`
-    + months.map(m => `<button class="chip" type="button" data-m="${m}" aria-pressed="false">${fmt.monLong(m + '-01')}</button>`).join('')
-    + `<span class="vr"></span><button class="chip" type="button" data-avail aria-pressed="false">Places dispo</button><span class="vr"></span>`
-    + tags.map(t => `<button class="chip" type="button" data-tag="${esc(norm(t))}" aria-pressed="false">${esc(t)}</button>`).join('');
-  const f = { tag: '', m: '', avail: false, q: '' };
-  const q = $('[data-q]'); q.value = f.q;
-  const apply = () => {
-    let shown = 0;
-    $$('.row', list).forEach(r => {
-      const ok = (!f.tag || r.dataset.tag === f.tag) && (!f.m || r.dataset.month === f.m) && (!f.avail || r.dataset.avail === '1') && (!f.q || r.dataset.search.includes(norm(f.q)));
-      r.hidden = !ok; shown += ok;
-    });
-    $$('section[data-mon]', list).forEach(s => s.hidden = !$$('.row:not([hidden])', s).length);
-    $('[data-none]', list).hidden = !!shown;
-    $$('.chip', $('[data-tags]')).forEach(c => c.setAttribute('aria-pressed',
-      c.hasAttribute('data-avail') ? f.avail : c.dataset.m ? c.dataset.m === f.m : c.dataset.tag === f.tag && (c.dataset.tag !== '' || (!f.m && !f.avail))));
-  };
-  $('[data-tags]').addEventListener('click', ev => {
-    const c = ev.target.closest('.chip'); if (!c) return;
-    if (c.hasAttribute('data-avail')) f.avail = !f.avail;
-    else if (c.dataset.m) f.m = f.m === c.dataset.m ? '' : c.dataset.m;
-    else if (c.dataset.tag === '') { f.tag = ''; f.m = ''; f.avail = false; }
-    else f.tag = f.tag === c.dataset.tag ? '' : c.dataset.tag;
-    apply();
-  });
-  q.addEventListener('input', () => { f.q = q.value; apply(); });
-  list.addEventListener('click', ev => { if (ev.target.closest('[data-reset]')) { Object.assign(f, { tag: '', m: '', avail: false, q: '' }); q.value = ''; apply(); } });
-  apply();
-}
-
-function concert() {
-  const root = $('[data-concert]'); if (!root) return;
-  if (!root.dataset.bound) { root.dataset.bound = 1; addEventListener('hashchange', () => { concert(); scrollTo(0, 0); motionScene(); }); }
-  const e = byId(location.hash.slice(1)) || nextBookable()?.e || EVENTS[0];
-  document.title = `${e.title} — Le Duc des Lombards`;
-  const occ = e.dates.map(x => ({ e, d: x.d, sets: x.sets }));
-  const first = occ.find(o => o.sets.some(s => bookable(setState(o.d, s)))) || occ[0];
-  const others = upcoming().filter(o => o.e.id !== e.id && !o.e.jam).slice(0, 5);
-  const C = CONTENT[e.id] || {};
-  const paras = (C.desc || '').split('\n').filter(Boolean);
-  const about = (paras.length || C.lu) ? `<section class="sec about"><div class="sec-head"><h2>${e.jam ? 'La <span class="it">jam</span>' : 'Le <span class="it">concert</span>'}</h2></div><div class="g12">
-    <div class="cell c7">${paras.length ? `<p class="about-lede">${esc(paras[0])}</p>${paras.slice(1).map(x => `<p class="about-p">${esc(x)}</p>`).join('')}` : `<p class="about-lede">${esc(title(e))}, ${esc(e.tag.toLowerCase())}, en live au Duc des Lombards.</p>`}
-      ${e.jam ? '<p class="about-p"><b>Réservations sur Shotgun</b> ou directement au guichet.</p>' : ''}</div>
-    <div class="cell c5" style="border-right:0"><span class="k">Line-up</span>${C.lu ? `<ul class="lineup">${C.lu.map(([n, i]) => `<li><b>${esc(n)}</b><span>${esc(i)}</span></li>`).join('')}</ul>` : ''}</div>
-  </div></section>` : '';
-  const video = C.yt ? `<section class="sec"><div class="sec-head"><h2>En <span class="it">vidéo</span></h2><div class="side"><a class="btn" href="https://www.youtube.com/watch?v=${C.yt}" target="_blank" rel="noopener">YouTube ↗</a></div></div>
-    <div class="vp" data-yt="${C.yt}"><img src="assets/img/yt/${C.yt}.webp" alt="" loading="lazy" decoding="async"><button class="vp-play" type="button" aria-label="Lire la vidéo de ${esc(e.title)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4l13 8-13 8z" fill="currentColor"/></svg><span>Lire la vidéo</span></button><span class="vp-tag">${esc(e.title)}</span></div></section>` : '';
-  const live = !/claudeusercontent\.com$/.test(location.hostname);
-  const video2 = C.yt && live ? `<section class="sec"><div class="sec-head"><h2>En <span class="it">vidéo</span></h2></div>
-    <div class="vp is-playing"><iframe src="https://www.youtube-nocookie.com/embed/${C.yt}?rel=0&modestbranding=1" title="Vidéo — ${esc(e.title)}" loading="lazy" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div></section>` : video;
-  root.innerHTML = posterHero(first, relDay(first.d)) + about + video2 + `
-  ${occ.length > 1 ? `<section class="sec"><div class="sec-head"><h2>Toutes <span class="it">les dates</span></h2></div>${occ.map(row).join('')}</section>` : ''}
-  <section class="sec"><div class="g12">
-    <div class="cell c4"><span class="k">Portes</span><p class="lede">${e.jam ? 'Dès 23:30' : '30 min avant le set'}</p></div>
-    <div class="cell c4"><span class="k">Accès</span><p class="lede">42, rue des Lombards<br>Métro Châtelet</p></div>
-    <div class="cell c4"><span class="k">Au bar</span><p class="lede"><a href="bar.html">Cocktails & planches</a></p></div>
-  </div></section>
-  <section class="sec"><div class="sec-head"><h2>À suivre</h2><div class="side"><a class="btn" href="agenda.html">Agenda <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 10h14M12 5l5 5-5 5"/></svg></a></div></div>${others.map(row).join('')}</section>`;
-  const ld = document.createElement('script'); ld.type = 'application/ld+json';
-  ld.textContent = JSON.stringify(e.dates.map(x => ({ '@context': 'https://schema.org', '@type': 'MusicEvent', name: title(e), startDate: `${x.d}T${x.sets[0].t}:00+01:00`,
-    location: { '@type': 'MusicVenue', name: 'Le Duc des Lombards', address: INFO.address }, offers: e.price ? { '@type': 'Offer', price: e.price, priceCurrency: 'EUR', url: e.bt || BILLETTERIE } : undefined })));
-  document.head.append(ld);
-}
-
 /* ============ Chatbot ============ */
 const KB = [
   { k: /\b(prix|tarif|combien|cher|reduc|etudiant|jeune|moins de 25|chomeur|demandeur)/, a: () => `<p>Les concerts vont de <b>29 € à 41 €</b> selon la programmation, placement libre assis.</p><p>−7 € pour les moins de 25 ans, étudiants et demandeurs d’emploi · −3 € avec la carte Paris Jazz Club et pour les groupes de plus de 10.</p>`, book: true },
@@ -609,15 +579,14 @@ function answer(raw) {
 function bot() {
   const fab = document.createElement('button');
   fab.className = 'bot-fab'; fab.type = 'button'; fab.setAttribute('aria-label', 'Poser une question au Duc'); fab.setAttribute('aria-expanded', 'false');
-  fab.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8.5 8.5 0 0 1-12.6 7.4L3 21l1.6-5.4A8.5 8.5 0 1 1 21 12Z"/><circle cx="8.5" cy="12" r=".8" fill="currentColor"/><circle cx="12" cy="12" r=".8" fill="currentColor"/><circle cx="15.5" cy="12" r=".8" fill="currentColor"/></svg><span class="ping" aria-hidden="true"></span>`;
-  const hint = document.createElement('div'); hint.className = 'bot-hint'; hint.textContent = 'Une place pour ce soir ? Demandez-moi.';
+  fab.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8.5 8.5 0 0 1-12.6 7.4L3 21l1.6-5.4A8.5 8.5 0 1 1 21 12Z"/><circle cx="8.5" cy="12" r=".8" fill="currentColor"/><circle cx="12" cy="12" r=".8" fill="currentColor"/><circle cx="15.5" cy="12" r=".8" fill="currentColor"/></svg><span class="fab-l">Une question ?</span>`;
   const p = document.createElement('div'); p.className = 'bot'; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', 'Assistant du Duc des Lombards');
-  p.innerHTML = `<div class="bot-h"><span class="av" aria-hidden="true"></span><div><b>Le Duc répond</b><span>En ligne · réservation en 1 clic</span></div><button class="x" type="button" aria-label="Fermer l’assistant">${ICON_X}</button></div>
+  p.innerHTML = `<div class="bot-h"><span class="av" aria-hidden="true"></span><div><b>Une question sur le Duc ?</b><span>Assistant automatique · réponses tirées du site</span></div><button class="x" type="button" aria-label="Fermer l’assistant">${ICON_X}</button></div>
     <div class="bot-log" aria-live="polite"></div>
     <div class="quick">${['Ce soir', 'Ce week-end', 'Du piano', 'Tarifs', 'Venir au Duc', 'Jam session', 'Privatiser'].map(q => `<button class="chip" type="button">${q}</button>`).join('')}</div>
     <form class="bot-f"><label for="bot-in">Écrivez votre question</label><div class="bot-row"><input id="bot-in" autocomplete="off" placeholder="Ex. : un concert ce soir ?"><button type="submit" aria-label="Envoyer"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h13M11 5l5 5-5 5"/></svg></button></div></form>`;
   const scrim = document.createElement('div'); scrim.className = 'bot-scrim'; scrim.setAttribute('aria-hidden', 'true');
-  document.body.append(hint, scrim, p, fab);
+  document.body.append(scrim, p, fab);
   scrim.addEventListener('click', () => open(false));
   const log = $('.bot-log', p), input = $('#bot-in', p);
   // Mobile : la popup suit la zone réellement visible (clavier ouvert ou non)
@@ -641,12 +610,12 @@ function bot() {
   // une ligne d'action compacte par concert (plus de carte)
   const cards = occ => occ.slice(0, 3).forEach(o => {
     const st = o.sets.find(x => bookable(setState(o.d, x)));
-    const name = o.e.jam ? `Jam du Duc · ${o.e.sub}` : o.e.title;
+    const nm = o.e.jam ? `Jam du Duc · ${o.e.sub}` : o.e.title;
     const b = document.createElement(st ? 'button' : 'a');
     b.className = 'bot-go msg-in' + (st ? '' : ' is-off');
     if (st) { b.type = 'button'; Object.assign(b.dataset, { book: o.e.id, d: o.d, t: st.t }); }
     else b.href = link(o.e);
-    b.innerHTML = `<span>${esc(name)}<small>${fmt.wd(o.d)} ${ddmm(o.d)}${st ? ` · ${st.t}` : o.e.jam ? ' · 23:30 · entrée libre' : ' · complet'}</small></span><b>${st ? 'Réserver' : 'Voir'} →</b>`;
+    b.innerHTML = `<span>${esc(nm)}<small>${fmt.wd(o.d)} ${ddmm(o.d)}${st ? ` · ${st.t}` : o.e.jam ? ' · 23:30 · entrée libre' : ' · complet'}</small></span><b>${st ? 'Réserver' : 'Voir'} →</b>`;
     log.append(b);
   });
   const reply = async q => {
@@ -658,8 +627,7 @@ function bot() {
     const a = answer(q); push('b', a.html); cards(a.occ); log.scrollTop = log.scrollHeight;
   };
   const open = v => {
-    p.classList.toggle('is-open', v); scrim.classList.toggle('is-on', v); requestAnimationFrame(() => fit && fit()); document.documentElement.style.overflow = v ? 'hidden' : ''; fab.setAttribute('aria-expanded', v); hint.classList.remove('is-on');
-    $('.ping', fab)?.remove();
+    p.classList.toggle('is-open', v); scrim.classList.toggle('is-on', v); requestAnimationFrame(() => fit && fit()); document.documentElement.style.overflow = v ? 'hidden' : ''; fab.setAttribute('aria-expanded', v);
     if (v) {
       if (!greeted) {
         greeted = true; const n = nextBookable();
@@ -676,175 +644,62 @@ function bot() {
   $('form', p).addEventListener('submit', e => { e.preventDefault(); const v = input.value.trim(); if (!v) return; input.value = ''; reply(v); });
   // bring the booking sheet above the chat
   p.addEventListener('click', e => { if (e.target.closest('[data-book],[data-wait]') && innerWidth < 760) open(false); });
-  if (!store.get('hinted', false)) setTimeout(() => { if (!p.classList.contains('is-open')) { hint.classList.add('is-on'); store.set('hinted', true); setTimeout(() => hint.classList.remove('is-on'), 6000); } }, 4000);
   document.addEventListener('click', e => { if (e.target.closest('[data-open-bot]')) { e.preventDefault(); open(true); } });
 }
-
-/* ============ Motion (motion.dev, ex-Framer Motion) ============ */
+/* ============ Motion (motion.dev) : discret, au service de la lecture ============ */
 let M = null;
 const EO = [.23, 1, .32, 1], IO = [.77, 0, .175, 1];
-function revealNow(scope) {
-  if (!M || reduce) { $$('[data-reveal]', scope).forEach(e => e.style.opacity = 1); return; }
-  M.animate($$('[data-reveal]', scope), { opacity: [0, 1] }, { duration: .4, delay: M.stagger(.04) });
-}
-/* masques : mots (<span class="w"><i>) ou lettres (<span class="ch"><i>) */
-function splitText(el, mode = 'w') {
-  if (el.dataset.split) return $$(`.${el.dataset.split} > i`, el);
+function splitText(el) {
+  if (el.dataset.split) return $$('.lt > i', el);
   const walk = node => [...node.childNodes].forEach(n => {
     if (n.nodeType === 3) {
       const frag = document.createDocumentFragment();
       n.textContent.split(/(\s+)/).forEach(p => {
         if (!p) return;
         if (/^\s+$/.test(p)) { frag.append(document.createTextNode(' ')); return; }
-        const units = mode === 'ch' ? [...p] : [p];
         const word = document.createElement('span'); word.style.display = 'inline-block'; word.style.whiteSpace = 'nowrap';
-        units.forEach(u => { const w = document.createElement('span'); w.className = mode; const i = document.createElement('i'); i.textContent = u; w.append(i); word.append(w); });
-        frag.append(mode === 'ch' ? word : word.firstChild);
+        [...p].forEach(u => { const w = document.createElement('span'); w.className = 'lt'; const i = document.createElement('i'); i.textContent = u; w.append(i); word.append(w); });
+        frag.append(word);
       });
       n.replaceWith(frag);
     } else if (n.nodeType === 1 && n.tagName !== 'BR') walk(n);
   });
-  walk(el); el.dataset.split = mode;
-  return $$(`.${mode} > i`, el);
+  walk(el); el.dataset.split = 1;
+  return $$('.lt > i', el);
 }
-/* compteur « split-flap » pour la date 06.11 */
-function flap(el) {
-  const txt = el.textContent; el.textContent = ''; el.setAttribute('aria-label', txt);
-  return [...txt].map((c, i) => {
-    if (!/\d/.test(c)) { el.append(c); return null; }
-    const box = document.createElement('span'); box.className = 'flap';
-    const col = document.createElement('span');
-    const seq = [...Array(10 + +c + 1)].map((_, k) => k % 10);
-    col.innerHTML = seq.map(d => `<b>${d}</b>`).join(''); box.append(col); el.append(box);
-    return { col, steps: seq.length - 1, i };
-  }).filter(Boolean);
-}
-
-/* ---------- Transition de page : 6 colonnes couleur ---------- */
-const PT = (() => { const d = document.createElement('div'); d.className = 'pt'; d.setAttribute('aria-hidden', 'true'); d.innerHTML = '<i></i>'.repeat(6); document.body.append(d); if (reduce) d.classList.add('is-off'); return d; })();
-setTimeout(() => { if (!M) PT.classList.add('is-off'); }, 2500);
-document.addEventListener('click', ev => {
-  const a = ev.target.closest('a[href]');
-  if (!a || !M || reduce || ev.metaKey || ev.ctrlKey || a.target === '_blank') return;
-  const href = a.getAttribute('href');
-  if (!/^[\w-]+\.html(#[\w-]*)?$/.test(href)) return;
-  const here = location.pathname.split('/').pop() || 'index.html';
-  if (href.split('#')[0] === here) return;
-  ev.preventDefault();
-  PT.classList.remove('is-off');
-  const cols = $$('i', PT);
-  cols.forEach(c => c.style.transformOrigin = 'bottom');
-  M.animate(cols, { transform: ['scaleY(0)', 'scaleY(1)'] }, { duration: .55, delay: M.stagger(.05), ease: IO }).finished.then(() => location.href = href);
-});
-addEventListener('pageshow', e => { if (e.persisted) PT.classList.add('is-off'); });
-
-/* ---------- La scène d'affiche ---------- */
-function motionScene() {
+function heroIn() {
   if (!M) return;
-  const { animate, stagger, scroll } = M;
-  const hero = $('.poster-hero'); if (!hero) return;
-  const l1 = splitText($('.nm.l1', hero), 'ch'), l2 = splitText($('.nm.l2', hero), 'ch');
-  const t0 = .45;
-  animate(l1, { transform: ['translateY(105%)', 'translateY(0%)'] }, { duration: .9, delay: stagger(.035, { startDelay: t0 }), ease: IO });
-  animate(l2, { transform: ['translateY(-105%)', 'translateY(0%)'] }, { duration: .9, delay: stagger(.035, { startDelay: t0 + .25, from: 'last' }), ease: IO });
-  const blk = $('.blk', hero);
-  animate(blk, { transform: ['scaleY(0)', 'scaleY(1)'] }, { duration: .8, delay: t0 + .1, ease: IO });
-  blk.style.transformOrigin = 'bottom';
-  const c = $('.cut', hero);
-  if (c) {
-    animate(c, { clipPath: ['inset(100% 0% 0% 0%)', 'inset(0% 0% 0% 0%)'], transform: ['scale(1.08)', 'scale(1)'] }, { duration: 1.3, delay: t0 + .2, ease: IO });
-    // le détouré suit la souris, ressort amorti
-    const wrap = $('.cut-wrap', hero);
-    if (matchMedia('(pointer: fine)').matches) hero.addEventListener('pointermove', ev => {
-      const r = hero.getBoundingClientRect(), x = (ev.clientX - r.left) / r.width - .5, y = (ev.clientY - r.top) / r.height - .5;
-      animate(wrap, { transform: `translateX(${x * 30}px)` }, { type: 'spring', stiffness: 120, damping: 18 });
-      animate(blk, { transform: `translate(${-x * 22}px, ${-y * 12}px)` }, { type: 'spring', stiffness: 90, damping: 16 });
-    });
-  }
-  const fl = $('[data-flap]', hero);
-  if (fl) flap(fl).forEach(f => animate(f.col, { transform: ['translateY(0)', `translateY(-${f.steps}em)`] }, { duration: 1.4 + f.i * .12, delay: t0, ease: [.6, 0, .1, 1] }));
-  const pid = $('.ph-id', hero);
-  if (pid) animate($$('span', pid), { transform: ['translateY(105%)', 'translateY(0%)'] }, { duration: .7, delay: stagger(.08, { startDelay: .35 }), ease: IO });
-  animate($$('.ph-meta > *, .ph-book', hero), { opacity: [0, 1], transform: ['translateY(10px)', 'translateY(0px)'] }, { duration: .6, delay: stagger(.06, { startDelay: t0 + .7 }), ease: EO });
-  animate($$('.ph-book .set', hero), { clipPath: ['inset(100% 0 0 0)', 'inset(0% 0 0 0)'] }, { duration: .7, delay: stagger(.08, { startDelay: t0 + .9 }), ease: IO });
-  // défilement : les deux lignes s'écartent, le détouré monte
-  scroll(animate($('.nm.l1', hero), { transform: ['translateX(0%)', 'translateX(-28%)'] }, { ease: 'linear' }), { target: hero, offset: ['start start', 'end start'] });
-  scroll(animate($('.nm.l2', hero), { transform: ['translateX(0%)', 'translateX(22%)'] }, { ease: 'linear' }), { target: hero, offset: ['start start', 'end start'] });
-  if (c) scroll(animate(c, { transform: ['scale(1)', 'scale(1.08)'] }, { ease: 'linear' }), { target: hero, offset: ['start start', 'end start'] });
+  const h = $('.chero'); if (!h) return;
+  const n = $('.ch-name', h);
+  M.animate(splitText(n), { transform: ['translateY(105%)', 'translateY(0%)'] }, { duration: .8, delay: M.stagger(.025, { startDelay: .1 }), ease: IO });
+  M.animate($('.duo', h), { clipPath: ['inset(0 0 100% 0)', 'inset(0 0 0% 0)'] }, { duration: .9, ease: IO });
+  M.animate($$('.ch-date, .ch-sub, .lu, .ch-book', h), { opacity: [0, 1], transform: ['translateY(12px)', 'translateY(0px)'] }, { duration: .6, delay: M.stagger(.06, { startDelay: .3 }), ease: EO });
+  const b = $('.badge', h); if (b) M.animate(b, { transform: ['scale(0) rotate(-40deg)', 'scale(1) rotate(-14deg)'] }, { type: 'spring', stiffness: 220, damping: 14, delay: .6 });
 }
-
 async function motion() {
   if (reduce) return;
-  try { M = await import('https://cdn.jsdelivr.net/npm/motion@11/+esm'); } catch { PT.classList.add('is-off'); return; }
+  try { M = await import('https://cdn.jsdelivr.net/npm/motion@11/+esm'); } catch { return; }
   document.documentElement.classList.add('js-motion');
-  const { animate, inView, stagger, scroll } = M;
-  // entrée de page : les colonnes se lèvent
-  animate($$('i', PT), { transform: ['scaleY(1)', 'scaleY(0)'] }, { duration: .75, delay: stagger(.06), ease: IO }).finished.then(() => PT.classList.add('is-off'));
-  motionScene();
-  // titres de pages et de sections : lettres qui montent
-  $$('main h1:not(.sr), main h2').forEach(h => {
-    if (h.closest('.poster-hero')) return;
-    const ch = splitText(h, 'ch'); ch.forEach(i => i.style.transform = 'translateY(105%)');
-    inView(h, () => { animate(ch, { transform: ['translateY(105%)', 'translateY(0%)'] }, { duration: .8, delay: stagger(.022, { startDelay: h.closest('.phero') ? .5 : 0 }), ease: IO }); }, { margin: '0px 0px -8% 0px' });
-  });
-  // détouré des pages intérieures
-  $$('.pcut').forEach(p => animate(p, { clipPath: ['inset(100% 0 0 0)', 'inset(0% 0 0 0)'], transform: ['translateY(10%)', 'translateY(0%)'] }, { duration: 1.2, delay: .55, ease: IO }));
-  // collage : marquees liées au scroll + parallaxe par pièce
-  const cl = $('.collage');
-  if (cl) {
-    scroll(animate($('.marq.m1', cl), { transform: ['translateX(5%)', 'translateX(-45%)'] }, { ease: 'linear' }), { target: cl, offset: ['start end', 'end start'] });
-    scroll(animate($('.marq.m2', cl), { transform: ['translateX(-45%)', 'translateX(5%)'] }, { ease: 'linear' }), { target: cl, offset: ['start end', 'end start'] });
-    $$('.pc', cl).forEach((p, i) => {
-      const sp = +p.dataset.speed || 1;
-      const amp = innerWidth > 800 ? 36 : 80, rot = innerWidth > 800 ? 1.2 : 3;
-      scroll(animate(p, { transform: [`translateY(${amp * sp}px) rotate(${(i % 2 ? 1 : -1) * rot * sp}deg)`, `translateY(${-amp * sp}px) rotate(0deg)`] }, { ease: 'linear' }), { target: cl, offset: ['start end', 'end start'] });
-      inView(p, () => { animate($('img', p), { clipPath: ['inset(100% 0 0 0)', 'inset(0% 0 0 0)'] }, { duration: 1, delay: i * .08, ease: IO }); animate($('.bg', p), { transform: ['scaleX(0)', 'scaleX(1)'] }, { duration: .8, delay: i * .08, ease: IO }); animate($('.lb', p), { clipPath: ['inset(0 100% 0 0)', 'inset(0 0% 0 0)'] }, { duration: .6, delay: .5 + i * .08, ease: IO }); });
-    });
-  }
-  // lignes d'agenda : balayage gauche → droite
-  const rowsIn = scope => inView($$('.row', scope).filter(r => !r.dataset.in), el => { const r = el.target || el; r.dataset.in = 1; animate(r, { clipPath: ['inset(0 100% 0 0)', 'inset(0 0% 0 0)'] }, { duration: .7, ease: IO }); }, { margin: '0px 0px -5% 0px' });
-  rowsIn(document);
-  inView('[data-reveal]', a => { const el = a.target || a; animate(el, { opacity: [0, 1], transform: ['translateY(20px)', 'translateY(0px)'] }, { duration: .7, ease: EO }); }, { margin: '0px 0px -10% 0px' });
-  inView('.photo', a => { const el = a.target || a; animate(el, { clipPath: ['inset(0 0 100% 0)', 'inset(0 0 0% 0)'] }, { duration: 1.1, ease: IO }); });
+  const { animate, inView, stagger } = M;
+  heroIn();
+  // cartes visibles au chargement : entrée en cascade ; les suivantes au défilement
+  const vis = $$('.cc').filter(c => !c.hidden && c.getBoundingClientRect().top < innerHeight);
+  animate(vis, { opacity: [0, 1], transform: ['translateY(16px)', 'translateY(0px)'] }, { duration: .5, delay: stagger(.035), ease: EO });
+  inView($$('.cc').filter(c => !vis.includes(c)), a => { const el = a.target || a; animate(el, { opacity: [0, 1], transform: ['translateY(20px)', 'translateY(0px)'] }, { duration: .55, ease: EO }); }, { margin: '0px 0px -6% 0px' });
+  $$('main .ph h1').forEach(h => animate(splitText(h), { transform: ['translateY(105%)', 'translateY(0%)'] }, { duration: .7, delay: stagger(.025), ease: IO }));
   inView('[data-count]', a => { const el = a.target || a; const to = +el.dataset.count; animate(0, to, { duration: 1.4, ease: EO, onUpdate: v => el.textContent = Math.round(v) + (el.dataset.suffix || '') }); });
-  // ticker : accélère avec la vitesse de défilement
-  const tk = $('.ticker-track');
-  if (tk) { let last = scrollY, raf; addEventListener('scroll', () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => { const v = Math.min(Math.abs(scrollY - last), 80); last = scrollY; tk.getAnimations().forEach(x => x.playbackRate = 1 + v / 6); clearTimeout(tk._t); tk._t = setTimeout(() => tk.getAnimations().forEach(x => x.playbackRate = 1), 160); }); }, { passive: true }); }
-  peek();
-}
-
-/* ---------- Aperçu détouré qui suit le curseur sur l'agenda ---------- */
-function peek() {
-  if (!matchMedia('(pointer: fine)').matches) return;
-  const pk = document.createElement('div'); pk.className = 'peek'; pk.setAttribute('aria-hidden', 'true'); document.body.append(pk);
-  let cur = null;
-  document.addEventListener('pointermove', ev => {
-    const r = ev.target.closest?.('.row[data-cut]');
-    const id = r?.dataset.cut || (r ? 'p:' + r.dataset.id : null);
-    if (id !== cur) {
-      cur = id;
-      if (r) {
-        const e = byId(r.dataset.id);
-        pk.innerHTML = r.dataset.cut ? `<img src="${cut(r.dataset.cut)}" alt="">` : media(e, '280px');
-        M.animate(pk, { opacity: 1, clipPath: ['inset(100% 0 0 0)', 'inset(0% 0 0 0)'] }, { duration: .45, ease: IO });
-      } else M.animate(pk, { opacity: 0 }, { duration: .2 });
-    }
-    if (r) M.animate(pk, { transform: `translate(${ev.clientX + 28}px, ${ev.clientY - 180}px) rotate(${(ev.movementX || 0) * .4}deg)` }, { type: 'spring', stiffness: 260, damping: 26 });
-  }, { passive: true });
 }
 
 /* ---------- Panneau de réservation : volet ---------- */
 function sheetIn(el) {
   if (!M) return;
-  M.animate(el, { clipPath: ['inset(0 0 0 100%)', 'inset(0 0 0 0%)'] }, { duration: .6, ease: IO });
-  M.animate($$('.sheet-in > *', el), { opacity: [0, 1], transform: ['translateX(40px)', 'translateX(0px)'] }, { duration: .55, delay: M.stagger(.05, { startDelay: .2 }), ease: EO });
-  const h = $('.sh-head h3', el); if (h) M.animate(splitText(h, 'ch'), { transform: ['translateY(105%)', 'translateY(0%)'] }, { duration: .7, delay: M.stagger(.02, { startDelay: .25 }), ease: IO });
+  M.animate(el, { transform: innerWidth < 900 ? ['translateY(100%)', 'translateY(0%)'] : ['translateX(100%)', 'translateX(0%)'] }, { duration: .5, ease: IO });
+  M.animate($$('.sheet-in > *', el), { opacity: [0, 1], transform: ['translateY(10px)', 'translateY(0px)'] }, { duration: .45, delay: M.stagger(.04, { startDelay: .18 }), ease: EO });
 }
-function sheetOut(el) { return M ? M.animate(el, { clipPath: ['inset(0 0 0 0%)', 'inset(0 0 0 100%)'] }, { duration: .45, ease: IO }).finished : Promise.resolve(); }
+function sheetOut(el) { return M ? M.animate(el, { transform: innerWidth < 900 ? ['translateY(0%)', 'translateY(100%)'] : ['translateX(0%)', 'translateX(100%)'] }, { duration: .35, ease: IO }).finished.then(() => { el.style.transform = ''; }) : Promise.resolve(); }
 function successIn(el) {
   if (!M) return;
-  const b = $('.sh-success .big', el); if (b) M.animate(splitText(b, 'ch'), { transform: ['translateY(110%) rotate(8deg)', 'translateY(0%) rotate(0deg)'] }, { duration: .8, delay: M.stagger(.05), ease: IO });
-  M.animate($$('.ticket, .row-btns, .sh-success .fine', el), { clipPath: ['inset(0 0 100% 0)', 'inset(0 0 0% 0)'] }, { duration: .7, delay: M.stagger(.1, { startDelay: .4 }), ease: IO });
+  M.animate($$('.ticket, .row-btns, .sh-success .fine', el), { opacity: [0, 1], transform: ['translateY(12px)', 'translateY(0)'] }, { duration: .5, delay: M.stagger(.08, { startDelay: .3 }), ease: EO });
 }
 
 /* ============ Lecteur vidéo (façade légère : rien ne charge avant le clic) ============ */
@@ -876,12 +731,11 @@ function quote() {
     $('[data-copy]', f).addEventListener('click', async () => { try { await navigator.clipboard.writeText(lines.join('\n')); toast('Texte copié.'); } catch { toast('Copie impossible : sélectionnez le texte.'); } });
   });
 }
-
 /* ============ Boot ============ */
 try { await syncSoTicket(EVENTS); } catch (err) { console.warn('SoTicket indisponible, données de démonstration', err); }
 header();
 const page = document.body.dataset.page;
-({ home, agenda, concert })[page]?.();
-dock(); bot(); lazyLotties(); quote();
+({ agenda, concert })[page]?.();
+upnext(); bot(); quote();
 { const n = nextBookable(); $$('[data-next]').forEach(b => { if (n) { b.dataset.book = n.e.id; b.dataset.d = n.d; b.dataset.t = n.set.t; } }); }
 motion();

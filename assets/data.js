@@ -8,8 +8,6 @@
 export const img = (name, w = 960) => name ? `assets/img/${name}-${w >= 700 ? 960 : 480}.webp` : null;
 export const srcset = name => name ? `assets/img/${name}-480.webp 480w, assets/img/${name}-960.webp 960w` : '';
 
-/* Détourés jugés propres ; les autres photos s'affichent en cadre plein. */
-export const NOCUT = ['harland', 'belmondo', 'faraotrio', 'morvan'];
 export const LOGO = 'assets/img/logo.webp';
 export const ROOM = 'assets/img/room-1152.webp';
 export const BILLETTERIE = 'https://billetterie.ducdeslombards.com/';
@@ -639,3 +637,25 @@ export const CONTENT = {
   ]
  }
 };
+
+/* ---------- Nouvelle charte (visuels 2026) : une famille musicale = une couleur ----------
+   Couleurs reprises des affiches du Duc ; le site s'en inspire sans les copier. */
+export const GENRES = {
+  classic: { label: 'Classic jazz', c: '#1d3a9e', l: '#dfe6fb' },
+  modern:  { label: 'Modern jazz',  c: '#8e1452', l: '#f6dbe7' },
+  vocal:   { label: 'Vocal',        c: '#93304f', l: '#f5dfe5' },
+  world:   { label: 'World',        c: '#d93a1c', l: '#fbe1d8' },
+  manouche:{ label: 'Manouche',     c: '#7b4a2b', l: '#f1e3d6' },
+  jam:     { label: 'Jam du Duc',   c: '#141414', l: '#ece6da' },
+};
+const G = {
+  'or-bareket-quartet-ayin': 'modern', 'kyle-eastwood-quintet-0': 'modern', 'ege-turev-1': 'modern', 'terrace-martin-quartet': 'modern',
+  'jesse-harris-6': 'vocal', 'ekep-nkwelle-0': 'vocal', 'leron-thomas-pan-amsterdam-and-free-band': 'classic',
+  'eric-harland-trio-feat-baptiste-trotignon-john-leftwich': 'modern', 'pablo-campos-quintet': 'classic',
+  'antonio-farao-stephane-belmondo-quartet': 'classic', 'antonio-farao-trio-3': 'classic', 'theodore-kuzma-trio-0': 'classic',
+  'dave-bristow-sides': 'modern', 'gabi-hartmann-4': 'vocal', 'jultrane-confirmation': 'modern', 'hugo-lippi-olha-maria': 'world',
+  'roberto-fonseca-trio-0': 'world', 'sarah-mckenzie-merry-christmas-sarah-mckenzie': 'vocal',
+};
+/* Visuels officiels fournis par le Duc (premier jet, nov. 2026) */
+const AFF = { 'leron-thomas-pan-amsterdam-and-free-band': 'leron', 'terrace-martin-quartet': 'terrace', 'sarah-mckenzie-merry-christmas-sarah-mckenzie': 'mckenzie', 'roberto-fonseca-trio-0': 'fonseca' };
+for (const e of EVENTS) { e.genre = e.jam ? 'jam' : G[e.id] || 'classic'; if (AFF[e.id]) e.affiche = AFF[e.id]; }

@@ -3,8 +3,11 @@
 Proposition de refonte du site [ducdeslombards.com](https://ducdeslombards.com) : club de jazz, Paris · Châtelet.
 
 - Site statique multipage (HTML, CSS, JS), sans framework ni traceur.
-- Réservation en 1 clic, chatbot sur les contenus du site, lecteur YouTube intégré sur chaque fiche concert.
-- Animations Motion (motion.dev) et Lottie, palette saphir / cyan / jade.
+- **v4 « affiche papier »** : l'accueil est l'agenda (8 à 10 concerts visibles sans défiler sur ordinateur, 4 à 5 sur mobile), charte inspirée des visuels 2026 du Duc (papier crème, League Spartan + Archivo, une couleur par famille musicale, pastille dorée), photos en bichromie générées en CSS à partir des photos d'origine : aucun détourage à préparer.
+- 1 clic pour découvrir (toute la carte ouvre la fiche artiste), 1 clic pour réserver (horaire 19:30 / 22:00).
+- Familles et couleurs : `GENRES` dans `assets/data.js` ; visuels officiels dans `assets/img/affiches/`.
+- Assistant (chatbot) conservé, plus discret, sur les contenus du site ; lecteur YouTube intégré sur chaque fiche concert.
+- Animations Motion (motion.dev) légères.
 - Maquette désindexée des moteurs de recherche (`noindex` + `robots.txt`).
 
 Contenus, photos et vidéos repris du site actuel du Duc des Lombards. Paiement simulé : à brancher sur la billetterie officielle.
