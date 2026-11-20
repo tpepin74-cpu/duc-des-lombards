@@ -659,3 +659,11 @@ const G = {
 /* Visuels officiels fournis par le Duc (premier jet, nov. 2026) */
 const AFF = { 'leron-thomas-pan-amsterdam-and-free-band': 'leron', 'terrace-martin-quartet': 'terrace', 'sarah-mckenzie-merry-christmas-sarah-mckenzie': 'mckenzie', 'roberto-fonseca-trio-0': 'fonseca' };
 for (const e of EVENTS) { e.genre = e.jam ? 'jam' : G[e.id] || 'classic'; if (AFF[e.id]) e.affiche = AFF[e.id]; }
+
+/* Point focal de chaque photo (x% y%) : le visage reste toujours dans le cadre, quel que soit le format */
+export const FOCUS = {
+  acoustic: '48% 8%', amsallem: '28% 35%', belmondo: '55% 18%', bristow: '64% 40%', chivallon: '72% 28%', ege: '52% 28%',
+  ekep: '55% 35%', faraotrio: '15% 30%', fonseca: '33% 20%', gabi: '32% 40%', harland: '92% 25%', horellou: '66% 48%',
+  jesse: '40% 30%', jultrane: '50% 22%', kuzma: '42% 38%', kyle: '50% 28%', leron: '52% 42%', lippi: '55% 15%',
+  mckenzie: '40% 18%', monfort: '55% 38%', morvan: '86% 38%', orbareket: '55% 48%', pablo: '50% 52%', terrace: '40% 22%',
+};

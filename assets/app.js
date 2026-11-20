@@ -1,6 +1,6 @@
 import { syncSoTicket } from './soticket.js';
 import { addToCart, warmCart, sameSite, bridgeUrl, BRIDGE_INSTALLED } from './cart.js';
-import { EVENTS, INFO, BILLETTERIE, CONTENT, GENRES, img, srcset } from './data.js';
+import { EVENTS, INFO, BILLETTERIE, CONTENT, GENRES, FOCUS, img, srcset } from './data.js';
 /* Le Duc des Lombards — v4 « affiche papier » : l'agenda d'abord, 1 clic pour découvrir, 1 clic pour réserver. */
 
 /* ============ Utils ============ */
@@ -63,7 +63,7 @@ const AR = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-wi
 
 /* Photo en bichromie (couleur de la famille + papier) : aucun détourage, juste la photo d'origine */
 const media = (e, sizes = '(max-width: 700px) 100vw, 25vw', eager = false) => `<span class="duo" style="${gvars(e)}">${e.img
-  ? `<img src="${img(e.img, 480)}" srcset="${srcset(e.img)}" sizes="${sizes}" alt="${esc(name(e))}" ${eager ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async" width="480" height="360">`
+  ? `<img src="${img(e.img, 480)}" srcset="${srcset(e.img)}" sizes="${sizes}" alt="${esc(name(e))}" style="object-position:${FOCUS[e.img] || '50% 30%'}" ${eager ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async" width="480" height="360">`
   : `<span class="duo-ph" aria-hidden="true">${esc(name(e))}</span>`}</span>`;
 const badge = (e, cls = '') => `<span class="badge ${cls}" aria-label="Style : ${esc(gc(e).label)}"><i>${esc(gc(e).label)}</i></span>`;
 
@@ -228,20 +228,22 @@ function concert() {
       ? `<div class="vp is-playing"><iframe src="https://www.youtube-nocookie.com/embed/${C.yt}?rel=0&modestbranding=1" title="Vidéo — ${esc(name(e))}" loading="lazy" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>`
       : `<div class="vp" data-yt="${C.yt}"><img src="assets/img/yt/${C.yt}.webp" alt="" loading="lazy" decoding="async"><button class="vp-play" type="button" aria-label="Lire la vidéo de ${esc(name(e))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4l13 8-13 8z" fill="currentColor"/></svg><span>Lire la vidéo</span></button></div>`) : '';
   root.innerHTML = `
-  <section class="chero" style="${gvars(e)}" aria-labelledby="ch-title">
-    <div class="ch-media">${media(e, '(max-width: 900px) 100vw, 50vw', true)}${e.jam ? '' : badge(e, 'big')}</div>
-    <div class="ch-txt">
-      <p class="ch-date">${dateLine(shown[0].d)}${e.dates.length > 1 ? `<span class="more">+ ${e.dates.length - 1} date${e.dates.length > 2 ? 's' : ''}</span>` : ''}</p>
-      <h1 id="ch-title" class="ch-name">${esc(name(e))}</h1>
-      ${e.sub ? `<p class="ch-sub">${esc(e.jam ? `avec ${e.sub}` : e.sub)}</p>` : ''}
-      ${lu}
-      <div class="ch-book">
-        ${shown.map(o => `<div class="ch-occ"><span class="ch-occ-d">${shown.length > 1 ? `${fmt.wd(o.d)} ${ddmm(o.d)}` : ''}</span>${e.jam ? `<p class="cc-jam">23:30 · entrée libre · sans réservation</p>` : chips(o)}</div>`).join('')}
-        ${prices}
-        <p class="fine">Placement libre assis · portes 30 min avant · set de 75 min</p>
-      </div>
+  <section class="chero" style="${gvars(e)}" aria-labelledby="ch-title"><div class="ch-grid">
+    <div class="ch-when">
+      <p class="ch-day"><b>${fmt.wdLong(shown[0].d)} ${fmt.day(shown[0].d)} ${fmt.monLong(shown[0].d)}</b> ${shown[0].d.slice(0, 4)}</p>
+      <p class="ch-times">${e.jam ? '23H30 · entrée libre' : shown[0].sets.map(x => x.t.replace(':', 'H')).join(' <i>|</i> ')}${e.dates.length > 1 ? ` <span class="more">· ${e.dates.length} soirs</span>` : ''}</p>
     </div>
-  </section>
+    <h1 id="ch-title" class="ch-name">${esc(name(e))}</h1>
+    ${e.sub ? `<p class="ch-sub">${esc(e.jam ? `avec ${e.sub}` : e.sub)}</p>` : ''}
+    ${lu}
+    <div class="ch-book">
+      ${shown.map(o => `<div class="ch-occ"><span class="ch-occ-d">${shown.length > 1 ? `${fmt.wd(o.d)} <b>${fmt.day(o.d)}</b>` : 'Réserver'}</span>${e.jam ? `<p class="cc-jam">23:30 · entrée libre · sans réservation</p>` : chips(o)}</div>`).join('')}
+      ${prices}
+      <p class="fine">Placement libre assis · portes 30 min avant le set · 75 min</p>
+    </div>
+    <figure class="ch-media">${media(e, '(max-width: 900px) 100vw, 45vw', true)}${e.jam ? '' : badge(e, 'big')}</figure>
+    <div class="ch-sign" aria-hidden="true"><span class="logo"></span><p>42 rue des Lombards · 75001 Paris<br>01 42 33 22 88 · ducdeslombards.com</p></div>
+  </div></section>
   ${paras.length || video ? `<section class="sec ch-about" style="${gvars(e)}"><div class="wrap ${paras.length && video ? 'two' : 'one'}">
     ${paras.length ? `<div><h2 class="sh">Le concert</h2><p class="lede">${esc(paras[0])}</p>${paras.slice(1).map(x => `<p>${esc(x)}</p>`).join('')}</div>` : ''}
     ${video ? `<div><h2 class="sh">En vidéo</h2>${video}</div>` : ''}</div></section>` : ''}
@@ -673,7 +675,7 @@ function heroIn() {
   const n = $('.ch-name', h);
   M.animate(splitText(n), { transform: ['translateY(105%)', 'translateY(0%)'] }, { duration: .8, delay: M.stagger(.025, { startDelay: .1 }), ease: IO });
   M.animate($('.duo', h), { clipPath: ['inset(0 0 100% 0)', 'inset(0 0 0% 0)'] }, { duration: .9, ease: IO });
-  M.animate($$('.ch-date, .ch-sub, .lu, .ch-book', h), { opacity: [0, 1], transform: ['translateY(12px)', 'translateY(0px)'] }, { duration: .6, delay: M.stagger(.06, { startDelay: .3 }), ease: EO });
+  M.animate($$('.ch-when, .ch-sub, .lu, .ch-book, .ch-sign', h), { opacity: [0, 1], transform: ['translateY(12px)', 'translateY(0px)'] }, { duration: .6, delay: M.stagger(.06, { startDelay: .3 }), ease: EO });
   const b = $('.badge', h); if (b) M.animate(b, { transform: ['scale(0) rotate(-40deg)', 'scale(1) rotate(-14deg)'] }, { type: 'spring', stiffness: 220, damping: 14, delay: .6 });
 }
 async function motion() {

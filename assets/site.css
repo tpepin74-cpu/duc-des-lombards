@@ -11,6 +11,8 @@
   --fd: "League Spartan", "Futura", "Avenir Next", system-ui, sans-serif;   /* titres d'affiche */
   --f: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;          /* texte et infos */
   --pad: clamp(16px, 3.2vw, 44px);
+  --cond: 66%;                  /* Archivo étroit, comme les infos des affiches */
+  --fs: "Bodoni Moda", "Didot", "Bodoni 72", serif;   /* italique des pastilles dorées */
   --hdr: 64px;
   --io: cubic-bezier(.77, 0, .175, 1); --eo: cubic-bezier(.23, 1, .32, 1);
   color-scheme: light;
@@ -42,12 +44,12 @@ p { margin: 0; }
 .hdr .wrap { height: 100%; display: flex; align-items: center; gap: 24px; }
 .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--blue); flex: none; }
 .brand .logo { width: 50px; }
-.brand-tx { font: 600 .74rem/1.15 var(--f); font-stretch: 75%; text-transform: uppercase; letter-spacing: .08em; color: var(--ink); }
+.brand-tx { font: 600 .74rem/1.15 var(--f); font-stretch: var(--cond); text-transform: uppercase; letter-spacing: .08em; color: var(--ink); }
 .brand-tx b { display: block; font-weight: 800; }
 .nav { display: flex; gap: clamp(14px, 2vw, 30px); margin-left: auto; }
-.nav a { font: 700 .95rem/1 var(--f); font-stretch: 75%; text-transform: uppercase; letter-spacing: .06em; text-decoration: none; padding: 8px 0; border-bottom: 2px solid transparent; }
+.nav a { font: 700 .95rem/1 var(--f); font-stretch: var(--cond); text-transform: uppercase; letter-spacing: .06em; text-decoration: none; padding: 8px 0; border-bottom: 2px solid transparent; }
 .nav a:hover, .nav a[aria-current="page"] { border-color: currentColor; }
-.hdr-tel { font: 600 .95rem/1 var(--f); font-stretch: 75%; letter-spacing: .04em; text-decoration: none; white-space: nowrap; }
+.hdr-tel { font: 600 .95rem/1 var(--f); font-stretch: var(--cond); letter-spacing: .04em; text-decoration: none; white-space: nowrap; }
 .burger { display: none; margin-left: auto; width: 44px; height: 44px; border: 0; background: none; cursor: pointer; position: relative; }
 .burger span { position: absolute; left: 10px; right: 10px; height: 2px; background: var(--ink); transition: transform .3s var(--io); }
 .burger span:first-child { top: 17px; } .burger span:last-child { top: 25px; }
@@ -89,18 +91,11 @@ p { margin: 0; }
 .duo::after { background: var(--gl); mix-blend-mode: darken; }    /* blancs → papier teinté */
 .duo-ph { position: absolute; inset: 0; display: grid; place-items: center; padding: 12px; text-align: center; background: var(--g); color: var(--gl); font: 800 clamp(1.2rem, 3vw, 2.2rem)/.9 var(--fd); text-transform: uppercase; }
 
-/* ---------- Pastille dorée (style) ---------- */
-.badge { position: absolute; z-index: 3; top: 10px; right: 10px; width: 62px; height: 62px; border-radius: 50%; display: grid; place-items: center; text-align: center; transform: rotate(-14deg);
-  background: radial-gradient(circle at 30% 25%, var(--gold-b), var(--gold-a) 55%, var(--gold-c)); box-shadow: 0 1px 0 rgba(0,0,0,.15); }
-.badge i { font: italic 400 .66rem/1 Georgia, "Times New Roman", serif; text-transform: uppercase; letter-spacing: .02em; color: #1a1408; max-width: 52px; }
-.badge.big { width: 104px; height: 104px; top: 18px; right: 18px; }
-.badge.big i { font-size: 1.05rem; max-width: 84px; }
-
 /* ---------- Horaires : 1 clic = réservé ---------- */
 .sets { display: flex; gap: 6px; flex-wrap: wrap; position: relative; z-index: 2; }
 .set { flex: 1 1 0; min-width: 0; min-height: 46px; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; padding: 6px 10px; cursor: pointer; text-align: left;
   border: 1.5px solid var(--ink); background: var(--paper); color: var(--ink); transition: background-color .15s, color .15s, border-color .15s; }
-.set b { font: 800 1.15rem/1 var(--f); font-stretch: 75%; letter-spacing: .01em; font-variant-numeric: tabular-nums; }
+.set b { font: 800 1.15rem/1 var(--f); font-stretch: var(--cond); letter-spacing: .01em; font-variant-numeric: tabular-nums; }
 .set small { font: 600 .7rem/1 var(--f); font-stretch: 85%; text-transform: uppercase; letter-spacing: .06em; }
 .set.is-ok:hover, .set.is-last:hover { background: var(--g); border-color: var(--g); color: #fff; }
 .set.is-ok { background: var(--ink); color: var(--paper); }
@@ -129,7 +124,7 @@ p { margin: 0; }
 .filters .wrap { display: flex; align-items: center; gap: 6px; padding-top: 10px; padding-bottom: 12px; }
 .ag { padding-bottom: 72px; }
 .mon + .mon { margin-top: 8px; }
-.mh { display: flex; align-items: baseline; gap: 12px; padding: 18px 0 10px; font: 800 1.05rem/1 var(--f); font-stretch: 75%; text-transform: uppercase; letter-spacing: .1em; }
+.mh { display: flex; align-items: baseline; gap: 12px; padding: 18px 0 10px; font: 800 1.05rem/1 var(--f); font-stretch: var(--cond); text-transform: uppercase; letter-spacing: .1em; }
 .mh small { font: 600 .75rem/1 var(--f); font-stretch: 85%; letter-spacing: .08em; color: var(--ink-2); }
 .mh::after { content: ""; flex: 1; height: 1px; background: var(--rule); opacity: .3; align-self: center; }
 
@@ -146,7 +141,7 @@ p { margin: 0; }
 .cc:hover .duo::after { opacity: .55; }
 .when { position: absolute; z-index: 3; left: 0; top: 10px; background: var(--ink); color: var(--paper); padding: 6px 10px; font: 800 .78rem/1 var(--f); font-stretch: 80%; text-transform: uppercase; letter-spacing: .08em; }
 .cc-body { display: flex; flex-direction: column; gap: 6px; padding-top: 12px; flex: 1; }
-.cc-date { font: 600 .82rem/1 var(--f); font-stretch: 78%; text-transform: uppercase; letter-spacing: .06em; color: var(--g); }
+.cc-date { font: 600 .82rem/1 var(--f); font-stretch: var(--cond); text-transform: uppercase; letter-spacing: .06em; color: var(--g); }
 .cc-date b { font-weight: 800; }
 .cc h3 { font: 800 1.32rem/1.02 var(--fd); letter-spacing: -.005em; text-wrap: balance; color: var(--g); }
 .cc-link { text-decoration: none; }
@@ -202,39 +197,6 @@ p { margin: 0; }
 
 .empty { padding: 48px 0; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; font-size: 1.1rem; }
 
-/* ---------- FICHE CONCERT ---------- */
-.chero { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); min-height: calc(100svh - var(--hdr)); border-bottom: 1px solid var(--rule); }
-.ch-media { position: relative; min-height: 420px; }
-.ch-media .duo { position: absolute; inset: 0; }
-.ch-txt { display: flex; flex-direction: column; justify-content: center; gap: 18px; padding: clamp(24px, 4vw, 64px) var(--pad); }
-.ch-date { display: flex; flex-wrap: wrap; align-items: baseline; gap: 12px; font: 600 clamp(1.1rem, 1.8vw, 1.6rem)/1 var(--f); font-stretch: 75%; text-transform: uppercase; letter-spacing: .02em; color: var(--g); }
-.ch-date b { font-weight: 800; }
-.ch-date .more { font-size: .7em; color: var(--ink-2); letter-spacing: .06em; }
-.ch-name { font: 800 clamp(2.6rem, 6.2vw, 6.4rem)/.88 var(--fd); color: var(--g); letter-spacing: -.015em; text-transform: uppercase; text-wrap: balance; }
-.lt { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: .04em; margin-bottom: -.04em; }
-.lt > i { display: inline-block; font-style: normal; }
-.ch-sub { font: 500 clamp(1.1rem, 2vw, 1.8rem)/1.05 var(--f); font-stretch: 75%; text-transform: uppercase; }
-.lu { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
-.lu li { font: 500 1.05rem/1.15 var(--f); font-stretch: 75%; text-transform: uppercase; }
-.lu li span { font-size: .72em; letter-spacing: .03em; }
-.ch-book { display: grid; gap: 10px; padding-top: 18px; border-top: 1px solid var(--rule); max-width: 560px; }
-.ch-occ { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 12px; }
-.ch-occ-d { font: 800 .9rem/1 var(--f); font-stretch: 75%; text-transform: uppercase; letter-spacing: .04em; min-width: 0; }
-.ch-occ-d:empty { display: none; }
-.ch-occ:has(.ch-occ-d:empty) { grid-template-columns: 1fr; }
-.ch-book .set { min-height: 58px; padding: 8px 14px; }
-.ch-book .set b { font-size: 1.5rem; }
-.ch-price { display: flex; flex-wrap: wrap; gap: 6px 18px; font: 500 .95rem/1.2 var(--f); font-stretch: 85%; }
-.ch-price b { font-weight: 800; }
-.fine { font-size: .82rem; color: var(--ink-2); line-height: 1.4; }
-@media (max-width: 900px) {
-  .chero { grid-template-columns: 1fr; min-height: 0; }
-  .ch-media { min-height: 0; aspect-ratio: 16 / 10; }
-  .ch-txt { gap: 12px; padding-top: 20px; padding-bottom: 28px; }
-  .badge.big { width: 76px; height: 76px; top: 12px; right: 12px; } .badge.big i { font-size: .74rem; max-width: 62px; }
-  .ch-book { padding-top: 14px; }
-}
-
 /* ---------- Sections ---------- */
 .sec { padding: clamp(40px, 6vw, 88px) 0; border-bottom: 1px solid color-mix(in srgb, var(--rule) 30%, transparent); }
 .sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
@@ -282,7 +244,7 @@ p { margin: 0; }
 .list.plain li::before { content: "—"; }
 .prices { width: 100%; border-collapse: collapse; }
 .prices th, .prices td { text-align: left; padding: 12px 0; border-bottom: 1px solid color-mix(in srgb, var(--rule) 25%, transparent); font-weight: 600; }
-.prices td { text-align: right; font: 800 1.4rem/1 var(--f); font-stretch: 75%; }
+.prices td { text-align: right; font: 800 1.4rem/1 var(--f); font-stretch: var(--cond); }
 .prices small { display: block; font-weight: 400; color: var(--ink-2); font-size: .82rem; }
 .ph + .filters { border-bottom: 1px solid color-mix(in srgb, var(--rule) 25%, transparent); }
 .sec > .wrap > .list { max-width: 900px; }
@@ -329,7 +291,7 @@ dialog::backdrop { background: rgba(20, 20, 20, .4); }
 .x:hover { background: var(--ink); color: var(--paper); }
 .sh-label { font: 700 .72rem/1 var(--f); font-stretch: 85%; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 8px; }
 .seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; }
-.seg button { min-height: 56px; border: 1.5px solid var(--ink); background: transparent; cursor: pointer; padding: 6px; font: 800 1.1rem/1 var(--f); font-stretch: 75%; text-transform: uppercase; transition: background-color .15s, color .15s; }
+.seg button { min-height: 56px; border: 1.5px solid var(--ink); background: transparent; cursor: pointer; padding: 6px; font: 800 1.1rem/1 var(--f); font-stretch: var(--cond); text-transform: uppercase; transition: background-color .15s, color .15s; }
 .seg button small { display: block; font: 600 .66rem/1.2 var(--f); font-stretch: 90%; letter-spacing: .04em; margin-top: 4px; opacity: .8; }
 .seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
 .seg button:disabled { opacity: .35; cursor: not-allowed; text-decoration: line-through; }
@@ -337,7 +299,7 @@ dialog::backdrop { background: rgba(20, 20, 20, .4); }
 .stepper { display: flex; border: 1.5px solid var(--ink); }
 .stepper button { width: 52px; height: 52px; border: 0; background: transparent; cursor: pointer; font: 700 1.5rem/1 var(--f); }
 .stepper button:hover { background: var(--ink); color: var(--paper); }
-.stepper output { min-width: 56px; display: grid; place-items: center; border-inline: 1.5px solid var(--ink); font: 800 1.5rem/1 var(--f); font-stretch: 75%; }
+.stepper output { min-width: 56px; display: grid; place-items: center; border-inline: 1.5px solid var(--ink); font: 800 1.5rem/1 var(--f); font-stretch: var(--cond); }
 .total { display: flex; justify-content: space-between; align-items: baseline; border-top: 1px solid var(--rule); padding-top: 14px; }
 .total span { font: 700 .75rem/1 var(--f); text-transform: uppercase; letter-spacing: .1em; }
 .total b { font: 800 2.6rem/.9 var(--fd); }
@@ -449,20 +411,97 @@ dialog::backdrop { background: rgba(20, 20, 20, .4); }
   .ag-head h1 span { margin: 0; }
 }
 @media (max-width: 700px) { [data-agenda][data-v="grid"] .grid > .mh { display: flex; } }
-/* Fiche : dates alignées, réservation remontée sur mobile */
-.ch-occ { grid-template-columns: 84px 1fr; }
-@media (max-width: 900px) {
-  .ch-txt { display: flex; flex-direction: column; }
-  .ch-book { order: 4; } .lu { order: 5; padding-top: 6px; }
-  .ch-media { aspect-ratio: auto; height: 34svh; min-height: 200px; }
-  .chero .badge.big { display: grid; }
-  .ch-name { font-size: clamp(2.2rem, 11vw, 3.4rem); }
-  .ch-occ { grid-template-columns: 70px 1fr; gap: 8px; }
-  .ch-book .set { min-height: 48px; }
-  .ch-book .set b { font-size: 1.2rem; }
-  .lu li { font-size: .95rem; }
-}
 .photo ~ * .cell, .photo ~ .cell { padding-left: clamp(16px, 2.4vw, 32px); }
 .cc-body, .ch-txt, .cc > * { min-width: 0; }
 .one { max-width: 1100px; }
 .aff img { background: var(--paper-2); }
+
+/* =====================================================================
+   Cohérence typographique avec les visuels du Duc
+   – noms : League Spartan, capitales, très serrés
+   – infos (dates, line-up, horaires) : Archivo étroit, capitales
+   – pastilles : Bodoni italique sur or
+   ===================================================================== */
+.cc h3 { font: 800 1.28rem/.94 var(--fd); text-transform: uppercase; letter-spacing: -.012em; }
+.cc-date { font-size: .9rem; letter-spacing: .02em; }
+.cc-sub { font-stretch: var(--cond); font-size: .92rem; letter-spacing: .01em; }
+@media (min-width: 701px) { .cc-media { aspect-ratio: 4 / 3; } }   /* format natif des photos : rien n'est rogné */
+.set b { font-stretch: var(--cond); font-size: 1.3rem; }
+.mh, .ag-head h1 span, .brand-tx, .nav a, .hdr-tel { font-stretch: var(--cond); }
+.nav a { font-size: 1.05rem; letter-spacing: .04em; }
+.ag-head h1 { text-transform: uppercase; letter-spacing: -.015em; }
+.ph h1 { letter-spacing: -.025em; }
+.inv em { font-family: var(--fs); font-style: italic; font-weight: 500; }
+
+/* ---------- Pastille dorée : comme sur les affiches ---------- */
+.badge { position: absolute; z-index: 3; top: 10px; right: 10px; width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; text-align: center; transform: rotate(-12deg);
+  background:
+    radial-gradient(120% 90% at 28% 18%, rgba(255, 246, 214, .75), transparent 42%),
+    linear-gradient(145deg, #7d5d22 0%, #c9a34f 30%, #e9d48e 48%, #b48a3a 66%, #6f521c 100%);
+  box-shadow: inset 0 0 0 1px rgba(80, 58, 18, .35), 0 2px 6px rgba(0, 0, 0, .18); }
+.badge::after { content: ""; position: absolute; inset: 0; border-radius: 50%; opacity: .35; mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 .4 0 0 0 0 .3 0 0 0 0 .1 0 0 0 .5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+.badge i { position: relative; z-index: 1; font: italic 500 .7rem/.92 var(--fs); text-transform: uppercase; letter-spacing: .01em; color: #17120a; max-width: 54px; }
+.badge.big { width: 112px; height: 112px; }
+.badge.big i { font-size: 1.2rem; max-width: 92px; }
+
+/* ---------- FICHE CONCERT : composition d'affiche ---------- */
+.chero { position: relative; border-bottom: 1px solid var(--rule); overflow: hidden;
+  /* plis de l'affiche, très discrets */
+  background-image: linear-gradient(90deg, transparent calc(33.333% - 1px), rgba(255,255,255,.55) calc(33.333% - 1px), rgba(0,0,0,.035) 33.333%, transparent calc(33.333% + 1px)),
+                    linear-gradient(90deg, transparent calc(66.666% - 1px), rgba(255,255,255,.55) calc(66.666% - 1px), rgba(0,0,0,.035) 66.666%, transparent calc(66.666% + 1px)),
+                    linear-gradient(0deg, transparent calc(50% - 1px), rgba(255,255,255,.5) calc(50% - 1px), rgba(0,0,0,.03) 50%, transparent calc(50% + 1px)); }
+.ch-grid { max-width: 1640px; margin: 0 auto; min-height: calc(100svh - var(--hdr)); display: grid; align-content: center;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr); column-gap: clamp(28px, 4.5vw, 80px);
+  grid-template-areas: "when media" "name media" "sub media" "lu media" "book media" "book sign";
+  padding: clamp(24px, 3.5vw, 56px) var(--pad); }
+.ch-when { grid-area: when; color: var(--g); margin-bottom: clamp(14px, 2vw, 26px); }
+.ch-day { font: 400 clamp(1.4rem, 2.6vw, 2.6rem)/.95 var(--f); font-stretch: var(--cond); text-transform: uppercase; letter-spacing: -.01em; }
+.ch-day b { font-weight: 800; }
+.ch-times { font: 400 clamp(1.05rem, 1.6vw, 1.5rem)/1.1 var(--f); font-stretch: var(--cond); text-transform: uppercase; margin-top: 4px; }
+.ch-times i { font-style: normal; opacity: .55; }
+.ch-times .more { color: var(--ink); }
+.ch-name { grid-area: name; font: 800 clamp(3rem, 7.4vw, 8.4rem)/.84 var(--fd); color: var(--g); text-transform: uppercase; letter-spacing: -.03em; text-wrap: balance; margin-left: -.04em; }
+.lt { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: .06em; margin-bottom: -.06em; }
+.lt > i { display: inline-block; font-style: normal; }
+.ch-sub { grid-area: sub; margin-top: clamp(10px, 1.4vw, 18px); font: 400 clamp(1.3rem, 2.4vw, 2.4rem)/1 var(--f); font-stretch: var(--cond); text-transform: uppercase; color: var(--ink); }
+.lu { grid-area: lu; list-style: none; margin: clamp(14px, 2vw, 28px) 0 0; padding: 0; display: grid; gap: 2px; }
+.lu li { font: 400 clamp(1.05rem, 1.5vw, 1.4rem)/1.12 var(--f); font-stretch: var(--cond); text-transform: uppercase; color: var(--ink); }
+.lu li b { font-weight: 500; }
+.lu li span { font-size: .7em; letter-spacing: .02em; }
+@media (min-width: 1200px) { .lu { grid-template-columns: repeat(2, minmax(0, max-content)); column-gap: 40px; } }
+.ch-book { grid-area: book; align-self: start; display: grid; gap: 8px; margin-top: clamp(18px, 2.4vw, 32px); padding-top: 16px; border-top: 2px solid var(--g); max-width: 620px; }
+.ch-occ { display: grid; grid-template-columns: 76px 1fr; align-items: center; gap: 12px; }
+.ch-occ-d { font: 400 1rem/1 var(--f); font-stretch: var(--cond); text-transform: uppercase; color: var(--g); }
+.ch-occ-d b { font-weight: 800; font-size: 1.3em; }
+.ch-book .set { min-height: 54px; padding: 6px 14px; }
+.ch-book .set b { font-size: 1.55rem; }
+.ch-book .set.is-ok { background: var(--g); border-color: var(--g); color: #fff; }
+.ch-book .set.is-ok:hover, .ch-book .set.is-last:hover { background: var(--ink); border-color: var(--ink); }
+.ch-price { display: flex; flex-wrap: wrap; gap: 4px 18px; margin-top: 4px; font: 400 1.05rem/1.2 var(--f); font-stretch: var(--cond); text-transform: uppercase; }
+.ch-price b { font-weight: 800; color: var(--g); }
+.ch-media { grid-area: media; position: relative; margin: 0; align-self: center; aspect-ratio: 4 / 5; max-height: calc(100svh - var(--hdr) - 150px); width: 100%; }
+.ch-media .duo { position: absolute; inset: 0; }
+.ch-media .badge.big { top: auto; bottom: -18px; left: -36px; right: auto; }
+.ch-sign { grid-area: sign; justify-self: end; align-self: end; display: flex; align-items: flex-end; gap: 14px; margin-top: 18px; color: var(--g); text-align: right; }
+.ch-sign .logo { width: 70px; order: 2; }
+.ch-sign p { font: 400 .78rem/1.3 var(--f); font-stretch: var(--cond); text-transform: uppercase; letter-spacing: .02em; }
+@media (max-width: 900px) {
+  .ch-grid { min-height: 0; grid-template-columns: 1fr; grid-template-areas: "media" "when" "name" "sub" "lu" "book"; padding-top: 0; padding-bottom: 28px; }
+  .ch-media { aspect-ratio: auto; height: 34svh; min-height: 210px; max-height: none; margin: 0 calc(var(--pad) * -1) 18px; width: auto; }
+  .ch-media .badge.big { width: 78px; height: 78px; bottom: -16px; left: auto; right: var(--pad); display: grid; }
+  .ch-media .badge.big i { font-size: .82rem; max-width: 64px; }
+  .ch-when { margin-bottom: 10px; }
+  .ch-name { font-size: clamp(2.5rem, 12.5vw, 4.2rem); }
+  .ch-sign { display: none; }
+  .ch-occ { grid-template-columns: 62px 1fr; gap: 8px; }
+  .ch-book .set { min-height: 48px; } .ch-book .set b { font-size: 1.3rem; }
+}
+.ch-about .sh, .aff .sh, .upnext .sh { text-transform: uppercase; letter-spacing: -.015em; }
+/* pastille des cartes : en bas, loin des visages */
+.cc-media .badge { top: auto; bottom: 10px; right: 10px; }
+@media (max-width: 700px) {
+  .cc-media .badge { display: none; }
+  .cc h3 { font-size: 1.1rem; }
+  .cc-media { aspect-ratio: auto; }
+}
