@@ -15,24 +15,44 @@ const store = {
 };
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+/* ============ Langue (FR par défaut, EN dans /en/) ============ */
+const EN = document.documentElement.lang === 'en';
+const LOC = EN ? 'en-GB' : 'fr-FR';
+const LP = EN ? 'en/' : '';            // préfixe des liens de pages (les pages EN ont <base href="../">)
+const DICT = {
+  'Réserver': 'Book', 'Dernières places': 'Last seats', 'Complet': 'Sold out', 'Guichet': 'At the door', 'Passé': 'Past',
+  'Liste d’attente': 'Waiting list', 'Entrée libre': 'Free entry', 'Ce soir': 'Tonight', 'Demain': 'Tomorrow',
+  'Tout': 'All', '7 jours': 'Next 7 days', 'Places dispo': 'Available', 'concerts': 'concerts', 'soirs': 'nights',
+  'Aucun concert ne correspond.': 'No concert matches.', 'Tout afficher': 'Show all',
+  'Puis': 'Then', '23:30 · entrée libre · sans réservation': '11:30pm · free entry · no booking',
+  'Plein': 'Full price', 'Réduit': 'Reduced', 'Jeune': 'Under 25',
+  'Placement libre assis · portes 30 min avant le set · 75 min': 'Unreserved seating · doors 30 min before · 75-min set',
+  'Le concert': 'The concert', 'En vidéo': 'Video', 'L’affiche': 'The poster', 'À suivre au Duc': 'Coming up at the Duc', 'Tout l’agenda': 'Full programme',
+  'Accès': 'Getting here', 'Au bar': 'At the bar', 'Une question': 'Questions', 'Cocktails, vins & planches': 'Cocktails, wines & sharing boards',
+  'Présentation et vidéo': 'About & video', 'Voir l’artiste': 'See the artist', 'avec': 'with',
+  'Jams du Duc': 'Duc Jam sessions', 'Ven. & sam. · 23:30 · entrée libre, sans réservation': 'Fri & Sat · 11:30pm · free entry, no booking',
+  'Prochaines': 'Next',
+  'Réduit : carte Paris Jazz Club, groupes 10+ · Jeune : −25 ans, étudiants, demandeurs d’emploi': 'Reduced: Paris Jazz Club card, groups 10+ · Under 25, students, jobseekers',
+};
+const T = s => EN ? (DICT[s] ?? s) : s;
 const NOW = new Date();
 const toDate = (d, t = '00:00') => new Date(`${d}T${t}:00`);
 const todayISO = () => { const n = NOW; return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`; };
 const addDays = (iso, n) => { const d = toDate(iso, '12:00'); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
 const fmt = {
-  wd: iso => toDate(iso, '12:00').toLocaleDateString('fr-FR', { weekday: 'short' }).replace('.', ''),
-  wdLong: iso => toDate(iso, '12:00').toLocaleDateString('fr-FR', { weekday: 'long' }),
+  wd: iso => toDate(iso, '12:00').toLocaleDateString(LOC, { weekday: 'short' }).replace('.', ''),
+  wdLong: iso => toDate(iso, '12:00').toLocaleDateString(LOC, { weekday: 'long' }),
   day: iso => toDate(iso, '12:00').getDate(),
-  mon: iso => toDate(iso, '12:00').toLocaleDateString('fr-FR', { month: 'short' }).replace('.', ''),
-  monLong: iso => toDate(iso, '12:00').toLocaleDateString('fr-FR', { month: 'long' }),
-  full: iso => toDate(iso, '12:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }),
+  mon: iso => toDate(iso, '12:00').toLocaleDateString(LOC, { month: 'short' }).replace('.', ''),
+  monLong: iso => toDate(iso, '12:00').toLocaleDateString(LOC, { month: 'long' }),
+  full: iso => toDate(iso, '12:00').toLocaleDateString(LOC, { weekday: 'long', day: 'numeric', month: 'long' }),
   time: t => t,
   eur: n => `${n} €`,
 };
-const relDay = iso => iso === todayISO() ? 'Ce soir' : iso === addDays(todayISO(), 1) ? 'Demain' : fmt.full(iso);
+const relDay = iso => iso === todayISO() ? T('Ce soir') : iso === addDays(todayISO(), 1) ? T('Demain') : fmt.full(iso);
 const isPast = (d, t) => toDate(d, t) < NOW;
 const setState = (d, s) => isPast(d, s.t) ? 'past' : s.s;
-const STATUS = { ok: 'Réserver', last: 'Dernières places', full: 'Complet', door: 'Guichet', past: 'Passé' };
+const STATUS = { ok: T('Réserver'), last: T('Dernières places'), full: T('Complet'), door: T('Guichet'), past: T('Passé') };
 const bookable = st => st === 'ok' || st === 'last';
 const byId = id => EVENTS.find(e => e.id === id);
 const title = e => e.sub && !e.jam ? `${e.title} — ${e.sub}` : e.jam ? `${e.title} · ${e.sub}` : e.title;
@@ -54,7 +74,7 @@ const gc = e => GENRES[e.genre] || GENRES.classic;
 const gvars = e => `--g:${gc(e).c};--gl:${gc(e).l}`;
 const name = e => e.jam ? 'Jam du Duc' : e.title;
 const ddmm = d => `${String(fmt.day(d)).padStart(2, '0')}.${d.slice(5, 7)}`;
-const link = e => `concert.html#${e.id}`;
+const link = e => `${LP}concert.html#${e.id}`;
 // Tarifs relevés sur la billetterie : plein / réduit (Paris Jazz Club) / jeune
 const pjcP = e => e.pjc ?? e.price - 3;
 const lowP = e => e.jeune ?? pjcP(e);
@@ -82,7 +102,7 @@ const badge = (e, cls = '') => {
 
 const chip = (e, d, s) => {
   const st = setState(d, s);
-  const label = e.jam ? 'Entrée libre' : st === 'full' ? 'Complet' : st === 'last' ? 'Dernières places' : STATUS[st];
+  const label = e.jam ? T('Entrée libre') : st === 'full' ? T('Liste d’attente') : STATUS[st];
   const attrs = bookable(st)
     ? `data-book="${e.id}" data-d="${d}" data-t="${s.t}" aria-label="Réserver ${esc(name(e))}, ${fmt.full(d)} à ${fmt.time(s.t)}"`
     : st === 'full' ? `data-wait="${e.id}" data-d="${d}" data-t="${s.t}" aria-label="${esc(name(e))} ${fmt.time(s.t)} complet, liste d’attente"`
@@ -94,23 +114,23 @@ const chips = o => `<div class="sets">${o.sets.map(s => chip(o.e, o.d, s)).join(
 /* Les jams se greffent sur le concert du même soir : « puis Jam du Duc dès 23:30 » */
 const jamOf = d => OCC.find(o => o.e.jam && o.d === d);
 const dateLine = d => `<span class="dl"><b>${fmt.wdLong(d)} ${fmt.day(d)}</b> ${fmt.monLong(d)}</span>`;
-const when = d => d === todayISO() ? 'Ce soir' : d === addDays(todayISO(), 1) ? 'Demain' : '';
+const when = d => d === todayISO() ? T('Ce soir') : d === addDays(todayISO(), 1) ? T('Demain') : '';
 
 /* Carte concert (grille sur ordinateur, ligne compacte sur mobile) :
    toute la carte ouvre la fiche artiste, les horaires réservent en 1 clic. */
 const card = (o, { eager = false } = {}) => {
   const e = o.e, j = !e.jam && jamOf(o.d), w = when(o.d);
   const ds = o.ds || [o.d], multi = ds.length > 1;
-  const range = multi ? `<span class="dl">Du <b>${fmt.day(ds[0])}</b> au <b>${fmt.day(ds.at(-1))} ${fmt.monLong(ds.at(-1))}</b></span>` : dateLine(o.d);
+  const range = multi ? (EN ? `<span class="dl"><b>${fmt.day(ds[0])}</b>–<b>${fmt.day(ds.at(-1))} ${fmt.monLong(ds.at(-1))}</b></span>` : `<span class="dl">Du <b>${fmt.day(ds[0])}</b> au <b>${fmt.day(ds.at(-1))} ${fmt.monLong(ds.at(-1))}</b></span>`) : dateLine(o.d);
   return `<article class="cc${e.jam ? ' is-jam' : ''}" style="${gvars(e)}" data-g="${e.genre}" data-month="${o.d.slice(0, 7)}" data-d="${ds.join(' ')}"
     data-search="${esc(norm(`${e.title} ${e.sub || ''} ${e.tag} ${gc(e).label}`))}" data-avail="${(o.occs || [o]).some(x => x.sets.some(s => bookable(setState(x.d, s)))) ? 1 : 0}">
     <div class="cc-media">${media(e, '(max-width: 700px) 96px, (max-width: 1300px) 25vw, 20vw', eager)}${e.jam ? '' : badge(e)}${w ? `<span class="when">${w}</span>` : ''}</div>
     <div class="cc-body">
-      <p class="cc-date">${range}${multi ? `<span class="nd">${ds.length} soirs</span>` : ''}</p>
-      <h3><a class="cc-link" href="${link(e)}">${esc(name(e))}</a></h3>
-      <p class="cc-sub">${esc(e.jam ? `avec ${e.sub}` : e.sub || e.tag)}${e.jam ? '' : `<span class="cc-p"> · dès ${lowP(e)} €</span>`}</p>
-      ${e.jam ? `<p class="cc-jam">23:30 · entrée libre · sans réservation</p>` : chips(o)}
-      ${j ? `<p class="cc-jam">Puis <b>Jam du Duc</b> · 23:30 · ${esc(j.e.sub)}</p>` : ''}
+      <p class="cc-date">${range}${multi ? `<span class="nd">${ds.length} ${T('soirs')}</span>` : ''}</p>
+      <h3><a class="cc-link" href="${link(e)}" aria-label="${esc(name(e))} : ${T('Voir l’artiste')}">${esc(name(e))}<span class="go" aria-hidden="true">${AR}</span></a></h3>
+      <p class="cc-sub"><span class="gl">${esc(gc(e).label)}</span>${e.jam ? `${T('avec')} ${esc(e.sub)}` : `${e.sub ? `<span class="s">${esc(e.sub)}</span>` : ''}<span class="cc-p">${e.price} €</span>`}</p>
+      ${e.jam ? `<p class="cc-jam">${T('23:30 · entrée libre · sans réservation')}</p>` : chips(o)}
+      ${j ? `<p class="cc-jam">${T('Puis')} <b>Jam du Duc</b> · 23:30 · ${esc(j.e.sub)}</p>` : ''}
     </div>
   </article>`;
 };
@@ -171,22 +191,27 @@ function agenda() {
   // une seule grille continue (pas de trou en fin de mois) ; les intitulés de mois n'apparaissent qu'en vue liste
   list.innerHTML = `<div class="grid">${months.map(m => {
     const its = occ.filter(o => o.d.slice(0, 7) === m);
-    return `<h2 class="mh" data-mon="${m}"><span>${fmt.monLong(m + '-01')} ${m.slice(0, 4)}</span><small>${its.filter(o => !o.e.jam).length} concerts</small></h2>`
+    return `<h2 class="mh" data-mon="${m}"><span>${fmt.monLong(m + '-01')} ${m.slice(0, 4)}</span><small>${its.filter(o => !o.e.jam).length} ${T('concerts')}</small></h2>`
       + its.map(o => { const c = card(o, { eager: first }); first = false; return c; }).join('');
-  }).join('')}</div><p class="empty" data-none hidden>Aucun concert ne correspond. <button class="btn" type="button" data-reset>Tout afficher</button></p>`;
+  }).join('')}</div><p class="empty" data-none hidden>${T('Aucun concert ne correspond.')} <button class="btn" type="button" data-reset>${T('Tout afficher')}</button></p>`;
 
   // Filtres : quand, style, places, recherche
   const week = [...Array(7)].map((_, i) => addDays(todayISO(), i));
   const used = new Set(upcoming().filter(o => !o.e.jam).map(o => o.e.genre));
   const genres = Object.keys(GENRES).filter(g => used.has(g));
   $('[data-tags]').innerHTML =
-      `<button class="chip" type="button" data-when="" aria-pressed="true">Tout</button>`
-    + `<button class="chip" type="button" data-when="tonight" aria-pressed="false">Ce soir</button>`
-    + `<button class="chip" type="button" data-when="week" aria-pressed="false">7 jours</button>`
-    + months.map(m => `<button class="chip" type="button" data-when="${m}" aria-pressed="false">${fmt.monLong(m + '-01')}</button>`).join('')
+      `<button class="chip" type="button" data-when="" aria-pressed="true">${T('Tout')}</button>`
+    + `<button class="chip" type="button" data-when="tonight" aria-pressed="false">${T('Ce soir')}</button>`
+    + `<button class="chip" type="button" data-when="week" aria-pressed="false">${T('7 jours')}</button>`
+    + `<button class="chip" type="button" data-avail aria-pressed="false">${T('Places dispo')}</button>`
     + `<span class="vr" aria-hidden="true"></span>`
     + genres.map(g => `<button class="chip g" type="button" data-g="${g}" style="--g:${GENRES[g].c}" aria-pressed="false"><i aria-hidden="true"></i>${GENRES[g].label}</button>`).join('')
-    + `<span class="vr" aria-hidden="true"></span><button class="chip" type="button" data-avail aria-pressed="false">Places dispo</button>`;
+    + `<span class="vr" aria-hidden="true"></span>`
+    + months.map(m => `<button class="chip" type="button" data-when="${m}" aria-pressed="false">${fmt.monLong(m + '-01')}</button>`).join('');
+  // bandeau Jams du Duc
+  const jb = $('[data-jams]'), jams = upcoming().filter(o => o.e.jam).slice(0, 4);
+  if (jb && jams.length) jb.innerHTML = `<div class="wrap"><b class="jt">${T('Jams du Duc')}</b><span class="ji">${T('Ven. & sam. · 23:30 · entrée libre, sans réservation')}</span>
+    <span class="jn">${T('Prochaines')} : ${jams.map(o => `<a href="${link(o.e)}">${fmt.wd(o.d)} ${fmt.day(o.d)} · ${esc(o.e.sub)}</a>`).join('')}</span></div>`;
   const f = { when: '', g: '', avail: false, q: '' };
   const q = $('[data-q]');
   const apply = () => {
@@ -226,7 +251,7 @@ function concert() {
   const root = $('[data-concert]'); if (!root) return;
   if (!root.dataset.bound) { root.dataset.bound = 1; addEventListener('hashchange', () => { concert(); scrollTo(0, 0); heroIn(); }); }
   const e = byId(location.hash.slice(1)) || nextBookable()?.e || EVENTS[0];
-  document.title = `${name(e)}${e.jam ? ` · ${e.sub}` : ''} — Le Duc des Lombards, club de jazz à Paris`;
+  document.title = `${name(e)}${e.jam ? ` · ${e.sub}` : ''} — Le Duc des Lombards, ${EN ? 'jazz club in Paris' : 'club de jazz à Paris'}`;
   const occ = e.dates.map(x => ({ e, d: x.d, sets: x.sets }));
   const live = occ.filter(o => o.sets.some(s => !isPast(o.d, s.t)));
   const shown = (live.length ? live : occ).slice(0, 4);
@@ -234,8 +259,9 @@ function concert() {
   const paras = (C.desc || '').split('\n').filter(Boolean);
   const others = upcoming().filter(o => o.e.id !== e.id && !o.e.jam).filter((o, i, a) => a.findIndex(x => x.e.id === o.e.id) === i).slice(0, 4);
   const lu = C.lu?.length ? `<ul class="lu">${C.lu.map(([n, i]) => `<li><b>${esc(n)}</b> <span>${esc(i)}</span></li>`).join('')}</ul>` : '';
-  const prices = e.price ? `<p class="ch-price"><span>Plein <b>${e.price} €</b></span><span>Réduit <b>${pjcP(e)} €</b></span>${e.jeune ? `<span>Jeune <b>${e.jeune} €</b></span>` : ''}</p>`
-    : `<p class="ch-price"><span><b>Entrée libre</b> · consommation obligatoire</span></p>`;
+  const prices = e.price ? `<p class="ch-price"><span>${T('Plein')} <b>${e.price} €</b></span><span>${T('Réduit')} <b>${pjcP(e)} €</b></span>${e.jeune ? `<span>${T('Jeune')} <b>${e.jeune} €</b></span>` : ''}</p>
+      <p class="fine">${T('Réduit : carte Paris Jazz Club, groupes 10+ · Jeune : −25 ans, étudiants, demandeurs d’emploi')}</p>`
+    : `<p class="ch-price"><span><b>${T('Entrée libre')}</b>${EN ? ' · drink purchase required' : ' · consommation obligatoire'}</span></p>`;
   const live2 = !/claudeusercontent\.com$/.test(location.hostname);
   const video = C.yt ? (live2
       ? `<div class="vp is-playing"><iframe src="https://www.youtube-nocookie.com/embed/${C.yt}?rel=0&modestbranding=1" title="Vidéo — ${esc(name(e))}" loading="lazy" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>`
@@ -244,31 +270,48 @@ function concert() {
   <section class="chero" style="${gvars(e)}" aria-labelledby="ch-title"><div class="ch-grid">
     <div class="ch-when">
       <p class="ch-day"><b>${fmt.wdLong(shown[0].d)} ${fmt.day(shown[0].d)} ${fmt.monLong(shown[0].d)}</b> ${shown[0].d.slice(0, 4)}</p>
-      <p class="ch-times">${e.jam ? '23H30 · entrée libre' : shown[0].sets.map(x => x.t.replace(':', 'H')).join(' <i>|</i> ')}${e.dates.length > 1 ? ` <span class="more">· ${e.dates.length} soirs</span>` : ''}</p>
+      <p class="ch-times">${e.jam ? (EN ? '11:30PM · free entry' : '23H30 · entrée libre') : shown[0].sets.map(x => x.t.replace(':', 'H')).join(' <i>|</i> ')}${e.dates.length > 1 ? ` <span class="more">· ${e.dates.length} ${T('soirs')}</span>` : ''}</p>
     </div>
     <h1 id="ch-title" class="ch-name">${esc(name(e))}</h1>
-    ${e.sub ? `<p class="ch-sub">${esc(e.jam ? `avec ${e.sub}` : e.sub)}</p>` : ''}
+    ${e.sub ? `<p class="ch-sub">${e.jam ? `${T('avec')} ${esc(e.sub)}` : esc(e.sub)}</p>` : ''}
     ${lu}
     <div class="ch-book">
-      ${shown.map(o => `<div class="ch-occ"><span class="ch-occ-d">${fmt.wd(o.d)} <b>${fmt.day(o.d)}</b></span>${e.jam ? `<p class="cc-jam">23:30 · entrée libre · sans réservation</p>` : chips(o)}</div>`).join('')}
+      ${shown.map(o => `<div class="ch-occ"><span class="ch-occ-d">${fmt.wd(o.d)} <b>${fmt.day(o.d)}</b></span>${e.jam ? `<p class="cc-jam">${T('23:30 · entrée libre · sans réservation')}</p>` : chips(o)}</div>`).join('')}
       ${prices}
-      <p class="fine">Placement libre assis · portes 30 min avant le set · 75 min</p>
+      <p class="fine">${T('Placement libre assis · portes 30 min avant le set · 75 min')}</p>
+      ${paras.length || C.yt ? `<a class="lnk more-l" href="#about" data-scroll="about">${T('Présentation et vidéo')} <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M10 3v14M5 12l5 5 5-5"/></svg></a>` : ''}
     </div>
     <figure class="ch-media">${media(e, '(max-width: 900px) 100vw, 45vw', true)}${e.jam ? '' : badge(e, 'big')}</figure>
     <div class="ch-sign" aria-hidden="true"><span class="logo"></span><p>42 rue des Lombards · 75001 Paris<br>01 42 33 22 88 · ducdeslombards.com</p></div>
   </div></section>
-  ${paras.length || video ? `<section class="sec ch-about" style="${gvars(e)}"><div class="wrap ${paras.length && video ? 'two' : 'one'}">
-    ${paras.length ? `<div><h2 class="sh">Le concert</h2><p class="lede">${esc(paras[0])}</p>${paras.slice(1).map(x => `<p>${esc(x)}</p>`).join('')}</div>` : ''}
-    ${video ? `<div><h2 class="sh">En vidéo</h2>${video}</div>` : ''}</div></section>` : ''}
-  ${e.affiche ? `<section class="sec aff" style="${gvars(e)}"><div class="wrap"><h2 class="sh">L’affiche</h2>
-    <picture><source media="(max-width: 700px)" srcset="assets/img/affiches/${e.affiche}-916.webp"><img src="assets/img/affiches/${e.affiche}-169.webp" alt="Affiche officielle : ${esc(name(e))} au Duc des Lombards" loading="lazy" decoding="async" width="1600" height="900"></picture></div></section>` : ''}
-  <section class="sec strip"><div class="wrap"><div><span class="k">Accès</span><p>42, rue des Lombards · Métro Châtelet, sortie 10</p></div><div><span class="k">Au bar</span><p><a href="bar.html">Cocktails, vins & planches</a></p></div><div><span class="k">Une question</span><p><a href="tel:+33142332288">01 42 33 22 88</a></p></div></div></section>
-  ${others.length ? `<section class="sec"><div class="wrap"><div class="sec-head"><h2 class="sh">À suivre au Duc</h2><a class="lnk" href="index.html">Tout l’agenda ${AR}</a></div>
+  ${paras.length || video ? `<section class="sec ch-about" id="about" style="${gvars(e)}"><div class="wrap ${paras.length && video ? 'two' : 'one'}">
+    ${paras.length ? `<div><h2 class="sh">${T('Le concert')}</h2><p class="lede">${esc(paras[0])}</p>${paras.slice(1).map(x => `<p>${esc(x)}</p>`).join('')}</div>` : ''}
+    ${video ? `<div><h2 class="sh">${T('En vidéo')}</h2>${video}</div>` : ''}</div></section>` : ''}
+  ${e.affiche ? `<section class="sec aff" style="${gvars(e)}"><div class="wrap"><h2 class="sh">${T('L’affiche')}</h2>
+    <picture><source media="(max-width: 700px)" srcset="assets/img/affiches/${e.affiche}-916.webp"><img src="assets/img/affiches/${e.affiche}-169.webp" alt="${EN ? 'Official poster' : 'Affiche officielle'} : ${esc(name(e))} au Duc des Lombards" loading="lazy" decoding="async" width="1600" height="900"></picture></div></section>` : ''}
+  <section class="sec strip"><div class="wrap"><div><span class="k">${T('Accès')}</span><p>42, rue des Lombards · ${EN ? 'Châtelet metro, exit 10' : 'Métro Châtelet, sortie 10'}</p></div><div><span class="k">${T('Au bar')}</span><p><a href="${LP}bar.html">${T('Cocktails, vins & planches')}</a></p></div><div><span class="k">${T('Une question')}</span><p><a href="tel:+33142332288">01 42 33 22 88</a></p></div></div></section>
+  ${others.length ? `<section class="sec"><div class="wrap"><div class="sec-head"><h2 class="sh">${T('À suivre au Duc')}</h2><a class="lnk" href="${LP}index.html">${T('Tout l’agenda')} ${AR}</a></div>
     <div class="grid">${others.map(o => card(o)).join('')}</div></div></section>` : ''}`;
   const ld = document.createElement('script'); ld.type = 'application/ld+json';
   ld.textContent = JSON.stringify(e.dates.map(x => ({ '@context': 'https://schema.org', '@type': 'MusicEvent', name: title(e), startDate: `${x.d}T${x.sets[0].t}:00+01:00`,
     location: { '@type': 'MusicVenue', name: 'Le Duc des Lombards', address: INFO.address }, offers: e.price ? { '@type': 'Offer', price: e.price, priceCurrency: 'EUR', url: e.bt || BILLETTERIE } : undefined })));
   document.head.append(ld);
+}
+
+/* ancres de la fiche : défilement sans toucher au hash (qui porte l'identifiant du concert) */
+document.addEventListener('click', ev => { const a = ev.target.closest('[data-scroll]'); if (!a) return; ev.preventDefault(); document.getElementById(a.dataset.scroll)?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' }); });
+
+/* Actualités : la semaine au Duc, générée depuis l'agenda */
+function week() {
+  const r = $('[data-week]'); if (!r) return;
+  const end = addDays(todayISO(), 7), seen = new Set();
+  r.innerHTML = upcoming().filter(o => !o.e.jam && o.d <= end && !seen.has(o.e.id) && seen.add(o.e.id)).map(o => card(o)).join('') || `<p class="fine">${EN ? 'No concert this week.' : 'Pas de concert cette semaine.'}</p>`;
+}
+/* Newsletter : formulaire prêt, à relier à l'outil d'emailing du Duc */
+function newsletter() {
+  const f = $('[data-newsletter]'); if (!f) return;
+  f.addEventListener('submit', ev => { ev.preventDefault(); if (!f.reportValidity()) return;
+    f.innerHTML = `<p class="lede">${EN ? 'Thank you! You will receive our next newsletter.' : 'Merci ! Vous recevrez notre prochaine newsletter.'}</p>`; });
 }
 
 /* « À l'affiche » sur les pages intérieures */
@@ -325,7 +368,7 @@ const sheet = {
     const user = store.get('user', null);
     const head = `<div class="grab" aria-hidden="true"></div>
       <div class="sh-head"><div class="sh-thumb">${media(e, '76px')}</div>
-        <div><h3 id="sh-title">${esc(e.title)}</h3><p>${esc(e.sub || e.tag)}</p></div>
+        <div><h3 id="sh-title">${esc(e.title)}</h3><p>${esc(e.sub || gc(e).label)}</p></div>
         <button class="x" type="button" data-close aria-label="Fermer">${ICON_X}</button></div>`;
     if (step === 'handoff') {
       const url = this.link();
@@ -362,10 +405,10 @@ const sheet = {
       const st = setState(d, s);
       return `<button type="button" data-time="${s.t}" aria-pressed="${s.t === t}" ${bookable(st) ? '' : 'disabled'}>${fmt.time(s.t)}<small>${st === 'last' ? 'Dernières places' : st === 'ok' ? 'Disponible' : STATUS[st]}</small></button>`;
     }).join('')}</div></div>`;
-    const rateSeg = `<div><div class="sh-label">Tarif</div><div class="seg">
-      <button type="button" data-rate="plein" aria-pressed="${rate === 'plein'}">Plein<small>${e.price} €</small></button>
-      ${e.jeune ? `<button type="button" data-rate="jeune" aria-pressed="${rate === 'jeune'}">−25 ans, étudiant<small>${e.jeune} €</small></button>` : ''}
-      <button type="button" data-rate="pjc" aria-pressed="${rate === 'pjc'}">Paris Jazz Club<small>${pjcP(e)} €</small></button></div></div>`;
+    const rateSeg = `<div><div class="sh-label">${EN ? 'Ticket' : 'Tarif'}</div><div class="seg">
+      <button type="button" data-rate="plein" aria-pressed="${rate === 'plein'}">${T('Plein')}<small>${e.price} €</small></button>
+      <button type="button" data-rate="pjc" aria-pressed="${rate === 'pjc'}">${T('Réduit')}<small>${pjcP(e)} € · Paris Jazz Club</small></button>
+      ${e.jeune ? `<button type="button" data-rate="jeune" aria-pressed="${rate === 'jeune'}">${T('Jeune')}<small>${e.jeune} € · ${EN ? 'under 25' : '−25 ans'}</small></button>` : ''}</div></div>`;
     const who = user
       ? `<div class="express">Réservation express · ${esc(user.email)} <button type="button" data-forget>Changer</button></div>`
       : `<div class="field" style="margin:0"><label for="sh-mail">E-mail pour recevoir vos billets</label><input id="sh-mail" type="email" autocomplete="email" inputmode="email" placeholder="vous@exemple.fr" required></div>`;
@@ -373,11 +416,11 @@ const sheet = {
     const url = this.link();
     const memo = url ? `<p class="fine">Vos places sont ajoutées directement au panier de la billetterie officielle.</p>` : '';
     this.el.innerHTML = `<div class="sheet-in">${head}${dateSeg}${setSeg}${rateSeg}
-      <div class="qty"><div><div class="sh-label" style="margin:0">Places</div><span class="fine">Groupe de plus de 10 : <a href="privatiser.html">tarif groupe</a></span></div>
+      <div class="qty"><div><div class="sh-label" style="margin:0">${EN ? 'Seats' : 'Places'}</div><span class="fine">${EN ? 'Groups of 10+:' : 'Groupe de plus de 10 :'} <a href="${LP}privatiser.html">${EN ? 'group rate' : 'tarif groupe'}</a></span></div>
         <div class="stepper"><button type="button" data-q="-1" aria-label="Retirer une place">−</button><output class="num" aria-live="polite">${qty}</output><button type="button" data-q="1" aria-label="Ajouter une place">+</button></div></div>
       ${url ? memo : who}
       <div class="total"><span>Total</span><b class="num" data-total>${fmt.eur(total)}</b></div>
-      <button type="button" class="btn pay"><span class="lbl">${url ? 'Ajouter au panier' : 'Réserver'} · ${fmt.eur(total)}</span><span class="spin" aria-hidden="true"></span></button>
+      <button type="button" class="btn pay"><span class="lbl">${url ? (EN ? 'Add to basket' : 'Ajouter au panier') : T('Réserver')} · ${fmt.eur(total)}</span><span class="spin" aria-hidden="true"></span></button>
       <p class="fine">Placement libre assis · ouverture des portes 30 min avant le set. Paiement sécurisé sur la billetterie du Duc. Billet nominatif envoyé par e-mail.</p>
     </div>`;
     this.bind();
@@ -396,7 +439,7 @@ const sheet = {
       this.st.qty = Math.min(10, Math.max(1, this.st.qty + +b.dataset.q));
       $('output', el).textContent = this.st.qty;
       const tot = fmt.eur(this.price() * this.st.qty);
-      $('[data-total]', el).textContent = tot; $('.pay .lbl', el).textContent = `${this.link() ? 'Ajouter au panier' : 'Réserver'} · ${tot}`;
+      $('[data-total]', el).textContent = tot; $('.pay .lbl', el).textContent = `${this.link() ? (EN ? 'Add to basket' : 'Ajouter au panier') : T('Réserver')} · ${tot}`;
       const m = $('.bt-memo p', el); if (m) m.innerHTML = this.memo();
     }));
     $('[data-forget]', el)?.addEventListener('click', () => { store.set('user', null); this.render(); });
@@ -471,7 +514,7 @@ function ics(e, d, t) {
 function waitlist(id, d, t) {
   const e = byId(id);
   const user = store.get('user', null);
-  const alt = nextBookable(o => o.e.tag === e.tag && o.e.id !== id) || nextBookable(o => o.d >= d);
+  const alt = nextBookable(o => o.e.genre === e.genre && o.e.id !== id) || nextBookable(o => o.d >= d);
   if (!sheet.el) sheet.build();
   sheet.el.innerHTML = `<div class="sheet-in"><div class="grab" aria-hidden="true"></div>
     <div class="sh-head"><div class="sh-thumb">${media(e, '76px')}</div><div><h3 id="sh-title">${esc(e.title)}</h3><p>${fmt.full(d)} · ${fmt.time(t)} · complet</p></div>
@@ -513,7 +556,7 @@ const KB = [
   { k: /\b(bonjour|salut|hello|bonsoir|coucou|hey)\b/, a: () => `<p>Bonsoir ! Je connais tout l’agenda du Duc. Dites-moi un soir, un artiste ou un style, et je vous réserve une place en un clic.</p>`, book: true },
   { k: /\b(merci|super|parfait|top|genial)/, a: () => `<p>Avec plaisir. À très vite rue des Lombards !</p>` },
 ];
-const STYLES = { vocal: 'Vocal', voix: 'Vocal', chant: 'Vocal', chanteuse: 'Vocal', piano: 'Piano', pianiste: 'Piano', groove: 'Groove', funk: 'Groove', folk: 'Folk', 'all star': 'All star', cuba: 'Comme à Cuba', cubain: 'Comme à Cuba', latin: 'Comme à Cuba', guitare: 'Guitar', guitar: 'Guitar', crooner: 'Crooner', standard: 'Standards', batterie: 'Drums', drums: 'Drums', album: "Sortie d'album", noel: 'Vocal', christmas: 'Vocal', contrebasse: 'Contrebasse' };
+const STYLES = { classic: 'Classic jazz', classique: 'Classic jazz', modern: 'Modern jazz', moderne: 'Modern jazz', world: 'World', monde: 'World', manouche: 'Manouche', gypsy: 'Manouche', vocal: 'Vocal', voix: 'Vocal', chant: 'Vocal', chanteuse: 'Vocal', piano: 'Piano', pianiste: 'Piano', groove: 'Groove', funk: 'Groove', folk: 'Folk', 'all star': 'All star', cuba: 'Comme à Cuba', cubain: 'Comme à Cuba', latin: 'Comme à Cuba', guitare: 'Guitar', guitar: 'Guitar', crooner: 'Crooner', standard: 'Standards', batterie: 'Drums', drums: 'Drums', album: "Sortie d'album", noel: 'Vocal', christmas: 'Vocal', contrebasse: 'Contrebasse' };
 const WD = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
 const MO = { nov: '11', novembre: '11', dec: '12', decembre: '12' };
 
@@ -546,14 +589,14 @@ function answer(raw) {
     out.html = ok.length ? `${d1 ? `<p>${esc(d1)}</p>` : ''}<p><b>${esc(e.title)}</b>${e.sub ? ` (${esc(e.sub)})` : ''} joue ${occ.map(o => fmt.full(o.d)).join(', ')}. ${e.price ? `Tarif ${e.price} €.` : ''} <a href="${link(e)}">Voir la fiche et la vidéo</a></p>`
       : `<p><b>${esc(e.title)}</b> affiche complet${e.jam ? '' : ' sur toutes les dates'}. Touchez un horaire pour la liste d’attente, ou essayez ceci :</p>`;
     out.occ = occ.slice(0, 2);
-    if (!ok.length && !e.jam) { const alt = nextBookable(o => o.e.tag === e.tag && o.e.id !== e.id) || nextBookable(); if (alt) out.occ.push(alt); }
+    if (!ok.length && !e.jam) { const alt = nextBookable(o => o.e.genre === e.genre && o.e.id !== e.id) || nextBookable(); if (alt) out.occ.push(alt); }
     return out;
   }
   if (dayFilter && styleKey) {
     const tag = norm(STYLES[styleKey]);
-    const both = upcoming().filter(o => dayFilter.includes(o.d) && norm(o.e.tag).includes(tag));
+    const both = upcoming().filter(o => dayFilter.includes(o.d) && norm(o.e.tag + ' ' + gc(o.e).label).includes(tag));
     if (both.length) { out.html = `<p>${dayLabel.charAt(0).toUpperCase() + dayLabel.slice(1)}, côté ${esc(STYLES[styleKey].toLowerCase())} :</p>`; out.occ = both.slice(0, 3); return out; }
-    const next = upcoming().filter(o => norm(o.e.tag).includes(tag) && o.d >= dayFilter[0]);
+    const next = upcoming().filter(o => norm(o.e.tag + ' ' + gc(o.e).label).includes(tag) && o.d >= dayFilter[0]);
     out.html = `<p>Pas de ${esc(STYLES[styleKey].toLowerCase())} ${dayLabel}. ${next.length ? `Le prochain rendez-vous ${esc(STYLES[styleKey].toLowerCase())} :` : 'Voici ce qui se joue :'}</p>`;
     out.occ = next.length ? next.slice(0, 2) : upcoming().filter(o => dayFilter.includes(o.d)).slice(0, 3);
     return out;
@@ -568,7 +611,7 @@ function answer(raw) {
   }
   if (styleKey) {
     const tag = STYLES[styleKey];
-    const occ = upcoming().filter(o => norm(o.e.tag).includes(norm(tag)) || (styleKey === 'noel' || styleKey === 'christmas') && /christmas/i.test(o.e.sub || ''));
+    const occ = upcoming().filter(o => norm(o.e.tag + ' ' + gc(o.e).label).includes(norm(tag)) || (styleKey === 'noel' || styleKey === 'christmas') && /christmas/i.test(o.e.sub || ''));
     const seen = new Set(); const uniq = occ.filter(o => !seen.has(o.e.id) && seen.add(o.e.id));
     out.html = uniq.length ? `<p>Côté ${esc(tag.toLowerCase())}, voici ce qui arrive :</p>` : `<p>Pas de date ${esc(tag.toLowerCase())} à l’agenda pour l’instant. Voici le prochain concert disponible :</p>`;
     out.occ = uniq.length ? uniq.slice(0, 3) : [nextBookable()].filter(Boolean);
@@ -601,7 +644,7 @@ function bot() {
     <div class="quick">${['Ce soir', 'Ce week-end', 'Du piano', 'Tarifs', 'Venir au Duc', 'Jam session', 'Privatiser'].map(q => `<button class="chip" type="button">${q}</button>`).join('')}</div>
     <form class="bot-f"><label for="bot-in">Écrivez votre question</label><div class="bot-row"><input id="bot-in" autocomplete="off" placeholder="Ex. : un concert ce soir ?"><button type="submit" aria-label="Envoyer"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h13M11 5l5 5-5 5"/></svg></button></div></form>`;
   const scrim = document.createElement('div'); scrim.className = 'bot-scrim'; scrim.setAttribute('aria-hidden', 'true');
-  document.body.append(scrim, p, fab);
+  document.body.append(scrim, p); ($('.hdr .burger') ? $('.hdr .burger').before(fab) : document.body.append(fab));
   scrim.addEventListener('click', () => open(false));
   const log = $('.bot-log', p), input = $('#bot-in', p);
   // Mobile : la popup suit la zone réellement visible (clavier ouvert ou non)
@@ -751,6 +794,6 @@ try { await syncSoTicket(EVENTS); } catch (err) { console.warn('SoTicket indispo
 header();
 const page = document.body.dataset.page;
 ({ agenda, concert })[page]?.();
-upnext(); bot(); quote();
+upnext(); week(); newsletter(); if (!EN) bot(); quote();
 { const n = nextBookable(); $$('[data-next]').forEach(b => { if (n) { b.dataset.book = n.e.id; b.dataset.d = n.d; b.dataset.t = n.set.t; } }); }
 motion();

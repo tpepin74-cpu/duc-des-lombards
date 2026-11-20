@@ -28,3 +28,18 @@ Le bouton « Ajouter au panier » met les places dans le panier de billetterie.d
   ou `<script>` en pied de page), puis passer `BRIDGE_INSTALLED = true` dans `assets/cart.js`.
   Le site envoie alors vers `…/cart#duc-add=<séance>.<plein|reduit|jeune>.<quantité>` et la passerelle remplit le panier.
 - Tant que la passerelle n'est pas activée, le bouton ouvre la page de la séance sur la billetterie.
+
+## Mettre à jour le site (pour l'équipe du Duc)
+
+- **Ajouter un concert** : une ligne dans `EVENTS` (`assets/data.js`) avec titre, sous-titre, tarifs, dates et sets, plus la photo d'origine en `assets/img/<nom>-480.webp` et `-960.webp`. Aucun détourage : la bichromie est générée automatiquement.
+- **Style musical** : une ligne dans `G` (même fichier) → `classic`, `modern`, `vocal`, `world` ou `manouche`. Couleur et pastille suivent.
+- **Cadrage du visage** : une ligne dans `FOCUS` (`'nom': 'x% y%'`).
+- **Affiche officielle** : déposer `assets/img/affiches/<nom>-169.webp` et `-916.webp`, puis l'ajouter dans `AFF`.
+- **À valider par le Duc** : les styles attribués aux artistes absents des visuels fournis (liste `G`).
+
+## Pages et langues
+
+- Pages : Agenda (accueil), fiche concert, Le Duc, Bar (carte complète), Actualités, Infos, Privatiser, Membres, Espace pro, Newsletter.
+- Version anglaise dans `en/` (générée par `tools/build.py` : `python3 tools/build.py .`). Les présentations d'artistes restent en français ; l'assistant n'est proposé qu'en français.
+- **Newsletter** : le formulaire est prêt mais doit être relié à l'outil d'emailing du Duc (non identifié sur le site actuel).
+- **Carte du bar** : les prix au verre et à la bouteille renvoient au PDF officiel (leur rattachement n'est pas lisible de façon fiable dans le PDF).
